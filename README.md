@@ -4,7 +4,7 @@ Shopping Cart Core Functionality PHP Library
 
 ## Installing
 
-`composer require treehousetim/shopCart`
+`composer require treehousetim/shopcart`
 
 ## Interfaces and Abstract Classes
 
