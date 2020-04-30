@@ -15,7 +15,6 @@ In order for a catalog object to function, it requires a product loader be imple
 
 
 ```php
-
 use \treehousetim\shopCart\catalog;
 use \treehousetim\shopCart\cart;
 
