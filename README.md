@@ -14,8 +14,7 @@ The constructor for the cart requires a catalog object be passed.
 In order for a catalog object to function, it requires a product loader be implemented that implements `catalogLoaderInterface`
 
 
-```
-<?php
+```php
 
 use \treehousetim\shopCart\catalog;
 use \treehousetim\shopCart\cart;
@@ -30,7 +29,6 @@ $cart->setTotalTypeLoader( (new \application\cart\myCatalogTotalTypeLoader()))
 	->setStorageHandler( (new \treehousetim\shopCart\cartStorageSession() ) )
 	->load();
 
-?>
 ```
 
 ## catalogLoaderInterface
