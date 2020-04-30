@@ -1,0 +1,29 @@
+{
+    "name": "treehousetim/shopCart",
+    "description": "A simple, zero-dependency, zero UI, Shopping Cart library.",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Tim Gallagher",
+            "email": "treehousetim@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": "^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6"
+    },
+    "autoload": {
+        "psr-4": {
+            "treehousetim\\shopCart\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "treehousetim\\shopCart\\test\\": "test/"
+        }
+    }
+}
