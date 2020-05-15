@@ -24,7 +24,7 @@ class formatting
 		return '<span class="number">' . $sign . trim( $number, ' -0' ) . '</span> <span class="units">' . $unit . '</unit';
 	}
 	//------------------------------------------------------------------------
-	public static function moneyFormat( $number, $decimals = 2 )
+	public static function moneyFormat( float $number, $decimals = 2 )
 	{
 		$sign = '';
 		if( $number < 0 )
