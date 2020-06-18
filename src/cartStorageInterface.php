@@ -2,8 +2,12 @@
 
 interface cartStorageInterface
 {
-	public function init( cart $cart ) : cartStorageInterface;
-	public function saveCartItem( cartItem $item ) : cartStorageInterface;
-	public function saveCartData( cartData $data ) : cartStorageInterface;
 	public function loadCart( cart $cart ) : cartStorageInterface;
+	public function emptyCart( cart $cart ) : cartStorageInterface;
+
+	public function saveItems( array $items ) : cartStorageInterface;
+	public function saveData( array $data ) : cartStorageInterface;
+
+	// used to clean up after all storage is complete
+	public function finalize( cart $cart ) : cartStorageInterface;
 }

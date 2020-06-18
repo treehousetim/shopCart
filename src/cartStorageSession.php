@@ -2,34 +2,61 @@
 
 class cartStorageSession implements cartStorageInterface
 {
-	public function init( cart $cart ) : cartStorageInterface
+	protected function checkSess()
 	{
-		$_SESSION['cart_items'] = [];
-		$_SESSION['cart_data'] = [];
-		return $this;
+		if( session_status() != PHP_SESSION_ACTIVE )
+		{
+			throw new Exception( 'No Active Session' );
+		}
 	}
 	//------------------------------------------------------------------------
-	public function saveCartItem( cartItem $item ) : cartStorageInterface
+	public function emptyCart( cart $cart ) : cartStorageInterface
 	{
-		$_SESSION['cart_items'][] = ['id' => $item->getProduct()->getId(), 'qty' => $item->getQty()];
+		$this->checkSess();
+
+		$_SESSION['cart_items'] = [];
+		$_SESSION['cart_data'] = [];
 
 		return $this;
 	}
 	//------------------------------------------------------------------------
-	public function saveCartData( cartData $data ) : cartStorageInterface
+	public function saveItems( array $items )
 	{
-		$_SESSION['cart_data'][] = $data;
+		$this->checkSess();
+
+		$_SESSION['cart_items'] = [];
+
+		foreach( $this->items as $item )
+		{
+			$_SESSION['cart_items'][] = ['id' => $item->getProduct()->getId(), 'qty' => $item->getQty()];
+		}
+
 		return $this;
 	}
 	//------------------------------------------------------------------------
-	public function resetCartData()  : cartStorageInterface
+	public function saveData( array $data )
 	{
-		$_SESSION['cart_data'] = array();
+		$this->checkSess();
+
+		$_SESSION['cart_data'] = [];
+
+		foreach( $this->data as $data )
+		{
+			$_SESSION['cart_data'][] = $data;
+		}
+
 		return $this;
+	}
+	//------------------------------------------------------------------------
+	public function finalize( cart $cart ) : cartStorageInterface
+	{
+		// do nothing
 	}
 	//------------------------------------------------------------------------
 	public function loadCart( cart $cart ) : cartStorageInterface
 	{
+		$this->checkSess();
+
 		$sess = $_SESSION['cart_items'] ?? array();
 
 		foreach( $sess as $item )

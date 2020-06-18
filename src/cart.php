@@ -25,10 +25,7 @@ class cart implements totalInterface
 	//------------------------------------------------------------------------
 	public function __destruct()
 	{
-		if( session_status() == PHP_SESSION_ACTIVE )
-		{
-			$this->save();
-		}
+		$this->save();
 	}
 	//------------------------------------------------------------------------
 	public function getCatalog() : catalog
@@ -54,7 +51,6 @@ class cart implements totalInterface
 		$this->populateTotalTypes();
 		return $this;
 	}
-	
 	//------------------------------------------------------------------------
 	public function getDistinctItemQty() : string
 	{
@@ -74,30 +70,30 @@ class cart implements totalInterface
 	//------------------------------------------------------------------------
 	public function addItem( cartItem $item ) : self
 	{
-			$this->items[ $item->getProduct()->getId() ] = $item;
+		$this->items[ $item->getProduct()->getId() ] = $item;
 
-			return $this;
+		return $this;
 	}
 	//------------------------------------------------------------------------
 	public function removeItem( cartItem $item ) : self
 	{
-			unset($this->items[ $item->getProduct()->getId() ]);
+		unset($this->items[ $item->getProduct()->getId() ]);
 
-			return $this;
+		return $this;
 	}
 	//------------------------------------------------------------------------
 	public function addProduct( product $product, $qty ) : self
 	{
 		if( $this->hasItemForProductId( $product->getId() ) )
 		{
-				$cartItem = $this->getItemByProductId( $product->getId() );
-				$cartItem->addQty( $qty );
+			$cartItem = $this->getItemByProductId( $product->getId() );
+			$cartItem->addQty( $qty );
 		}
 		else
 		{
-				$cartItem = new cartItem( $product );
-				$cartItem->addQty( $qty );
-				$this->addItem( $cartItem );
+			$cartItem = new cartItem( $product );
+			$cartItem->addQty( $qty );
+			$this->addItem( $cartItem );
 		}
 
 		return $this;
@@ -109,7 +105,13 @@ class cart implements totalInterface
 		
 		return $this;
 	}
-	
+	//------------------------------------------------------------------------
+	public function emptyCart() : self
+	{
+		$this->data = [];
+		$this->items = [];
+		$this->storageHandler->emptyCart( $this );
+	}
 	//------------------------------------------------------------------------
 	public function populateTotalTypes() : self
 	{
@@ -238,17 +240,10 @@ class cart implements totalInterface
 	//------------------------------------------------------------------------
 	public function save()
 	{
-		$this->storageHandler->init( $this );
+		$this->storageHandler->saveItems( $this->items );
+		$this->storageHandler->saveData( $this->data );
 
-		foreach( $this->items as $item )
-		{
-			$this->storageHandler->saveCartItem( $item );
-		}
-
-		foreach( $this->data as $data )
-		{
-			$this->storageHandler->saveCartData( $data );
-		}
+		$this->storageHandler->finalize();
 	}
 	//------------------------------------------------------------------------
 	public function getCartData() : array
@@ -258,7 +253,6 @@ class cart implements totalInterface
 	//------------------------------------------------------------------------
 	public function getDataByCartDataType( string $type ) 
 	{
-
 		if(count($this->data) > 0 )
 		{
 			
@@ -286,53 +280,54 @@ class cart implements totalInterface
 			return (array) $this->data;
 		}
 	}
-	//------------------------------------------------------------------------
-	public function resetData() : self
-	{
-		$this->storageHandler->resetCartData();
-		$this->data = array();
-		return $this;
-	}
-	//------------------------------------------------------------------------
-	public function nextData() : bool
-	{
-		next( $this->data );
-		if( key( $this->data ) === null )
-		{
-			return false;
-		}
+	// //------------------------------------------------------------------------
+	// public function resetData() : self
+	// {
+	// 	$this->storageHandler->resetCartData();
 
-		return true;
-	}
-	//------------------------------------------------------------------------
-	public function getData() : cartData
-	{
-		return current( $this->data );
-	}
+	// 	$this->data = array();
+	// 	return $this;
+	// }
+	// //------------------------------------------------------------------------
+	// public function nextData() : bool
+	// {
+	// 	next( $this->data );
+	// 	if( key( $this->data ) === null )
+	// 	{
+	// 		return false;
+	// 	}
+
+	// 	return true;
+	// }
+	// //------------------------------------------------------------------------
+	// public function getData() : cartData
+	// {
+	// 	return current( $this->data );
+	// }
 	//------------------------------------------------------------------------
 	public function getCartItems() : array
 	{
 		return $this->items;
 	}
+	// //------------------------------------------------------------------------
+	// public function resetItems()
+	// {
+	// 	reset( $this->items );
+	// }
 	//------------------------------------------------------------------------
-	public function resetItems()
-	{
-		reset( $this->items );
-	}
-	//------------------------------------------------------------------------
-	public function nextItem() : bool
-	{
-		next( $this->items );
-		if( key( $this->items ) === null )
-		{
-			return false;
-		}
+	// public function nextItem() : bool
+	// {
+	// 	next( $this->items );
+	// 	if( key( $this->items ) === null )
+	// 	{
+	// 		return false;
+	// 	}
 
-		return true;
-	}
-	//------------------------------------------------------------------------
-	public function getItem() : catalogTotalType
-	{
-		return current( $this->items );
-	}
+	// 	return true;
+	// }
+	// //------------------------------------------------------------------------
+	// public function getItem() : catalogTotalType
+	// {
+	// 	return current( $this->items );
+	// }
 }
