@@ -1,7 +1,6 @@
 # shopCart
 Shopping Cart Core Functionality PHP Library
 
-
 ## Installing
 
 `composer require treehousetim/shopcart`
@@ -31,7 +30,7 @@ $cart->setTotalTypeLoader( (new \application\cart\myCatalogTotalTypeLoader()))
 ```
 
 ## catalogLoaderInterface
-A catalog object must load products into the product catalog.  The interface for this is:
+A catalog object is used to load products into the product catalog.  
 
 ```php
 interface catalogLoaderInterface
@@ -46,7 +45,7 @@ interface catalogLoaderInterface
 
 You can use a lot of different storage options for a cart.  `treehousetim\shopCart` provides an implementation for session storage.
 
-After creating your implementation of this interface, you would supply it to your cart using `$cart->setStorageHandler( $storageHandler );`
+After creating your implementation of this interface, you must supply it to your cart using `$cart->setStorageHandler( $storageHandler );`
 
 ```php
 interface cartStorageInterface
@@ -60,12 +59,60 @@ interface cartStorageInterface
 
 ## catalogTotalTypeLoaderInterface
 
+You must implement a class that conforms to this interface to support different types of product totals. Typical e-commerce shop carts will probably only need a single catalogTotalType for price, but there are other businesses that need totals of different product properties.
+
 ```php
 interface catalogTotalTypeLoaderInterface
 {
 	public function nextType() : bool;
 	public function getType() : catalogTotalType;
 	public function resetType();
+}
+```
+
+Here is a sample catalogTotalTypeLoaderInterface implementation for both price and some special case of "points"
+
+```php
+<?php namespace application\libraries\cart;
+
+use treehousetim\shopCart\catalogTotalTypeLoaderInterface;
+use treehousetim\shopCart\catalogTotalType;
+
+class totalTypeLoader implements catalogTotalTypeLoaderInterface
+{
+	protected $types;
+
+	public function __construct()
+	{
+		$this->types[] = (new catalogTotalType( catalogTotalType::tPRODUCT_PRICE ) );
+		$this->types[] = (new catalogTotalType( catalogTotalType::tPRODUCT_FIELD ) )
+			->setIdentifier( 1 )
+			->setUnit( 'points' )
+			->setLabel( 'Point' )
+			->setProductField( 'productPoints' );
+		}
+	}
+	//------------------------------------------------------------------------
+	public function nextType() : bool
+	{
+		next( $this->types );
+		if( key( $this->types ) === null )
+		{
+			return false;
+		}
+
+		return true;
+	}
+	//------------------------------------------------------------------------
+	public function getType() : catalogTotalType
+	{
+		return current( $this->types );
+	}
+	//------------------------------------------------------------------------
+	public function resetType()
+	{
+		reset( $this->types );
+	}
 }
 ```
 

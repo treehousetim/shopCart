@@ -36,41 +36,6 @@ class cartItem
 	{
 		return $this->product;
 	}
-	// //------------------------------------------------------------------------
-	// public function getTotalWeight()
-	// {
-	// 	return bcmul( $this->qty, $this->product->weight );
-	// }
-	// //------------------------------------------------------------------------
-	// public function getTotalPremium()
-	// {
-	// 	return bcmul( $this->qty, $this->product->premium );
-	// }
-	// //------------------------------------------------------------------------
-	// public function formatWeight()
-	// {
-	// 	return unitFormatAutoScale( $this->getTotalWeight(), $this->product->unit );
-	// }
-	// //------------------------------------------------------------------------
-	// public function formatPremium()
-	// {
-	// 	return moneyFormat( $this->getTotalPremium() );
-	// }
-	// //------------------------------------------------------------------------
-	// public function getTotalCategories() : array
-	// {
-	// 	return $this->product->getTotalCategories();
-	// }
-	// //------------------------------------------------------------------------
-	// public function getTotalFormatted( string $type )
-	// {
-	// 	return $this->formatTotalType( $this->getTotal( $type ), $type, [] );
-	// }
-	// //------------------------------------------------------------------------
-	// public function getTotalTypes() : array
-	// {
-	// 	return $this->product->getTotalTypes();
-	// }
 	//------------------------------------------------------------------------
 	public function formatAmount( string $type )
 	{

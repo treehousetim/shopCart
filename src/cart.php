@@ -18,14 +18,7 @@ class cart implements totalInterface
 
 	public function __construct( catalog $catalog )
 	{
-			//$this->metalsCollection = new cartMetalCollection();
-			$this->catalog = $catalog;
-			//$this->setFormatter( new productAmountFormatter() );
-	}
-	//------------------------------------------------------------------------
-	public function __destruct()
-	{
-		$this->save();
+		$this->catalog = $catalog;
 	}
 	//------------------------------------------------------------------------
 	public function getCatalog() : catalog
@@ -210,17 +203,6 @@ class cart implements totalInterface
 		$this->getItemByProductId( $id )->updateQty( $qty );
 	}
 	//------------------------------------------------------------------------
-	// public function getTotalCategories() : array
-	// {
-	// 	$out = [];
-	// 	foreach( $this->items as $item )
-	// 	{
-	// 		$out = array_merge( $out, $item->getTotalCategories() );
-	// 	}
-
-	// 	return $out;
-	// }
-	//------------------------------------------------------------------------
 	public function populate()
 	{
 		$model = new productModel();
@@ -253,9 +235,8 @@ class cart implements totalInterface
 	//------------------------------------------------------------------------
 	public function getDataByCartDataType( string $type ) 
 	{
-		if(count($this->data) > 0 )
+		if( count($this->data) > 0 )
 		{
-			
 			foreach( $this->data as $cartData )
 			{
 				if( $cartData->isValidType( $type ) == false )
@@ -276,58 +257,12 @@ class cart implements totalInterface
 		}
 		else
 		{
-			//throw new \Exception("No cart data set yet. ", 1);
 			return (array) $this->data;
 		}
 	}
-	// //------------------------------------------------------------------------
-	// public function resetData() : self
-	// {
-	// 	$this->storageHandler->resetCartData();
-
-	// 	$this->data = array();
-	// 	return $this;
-	// }
-	// //------------------------------------------------------------------------
-	// public function nextData() : bool
-	// {
-	// 	next( $this->data );
-	// 	if( key( $this->data ) === null )
-	// 	{
-	// 		return false;
-	// 	}
-
-	// 	return true;
-	// }
-	// //------------------------------------------------------------------------
-	// public function getData() : cartData
-	// {
-	// 	return current( $this->data );
-	// }
 	//------------------------------------------------------------------------
 	public function getCartItems() : array
 	{
 		return $this->items;
 	}
-	// //------------------------------------------------------------------------
-	// public function resetItems()
-	// {
-	// 	reset( $this->items );
-	// }
-	//------------------------------------------------------------------------
-	// public function nextItem() : bool
-	// {
-	// 	next( $this->items );
-	// 	if( key( $this->items ) === null )
-	// 	{
-	// 		return false;
-	// 	}
-
-	// 	return true;
-	// }
-	// //------------------------------------------------------------------------
-	// public function getItem() : catalogTotalType
-	// {
-	// 	return current( $this->items );
-	// }
 }
