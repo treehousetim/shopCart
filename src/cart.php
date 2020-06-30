@@ -92,13 +92,6 @@ class cart implements totalInterface
 		return $this;
 	}
 	//------------------------------------------------------------------------
-	public function addData( cartData $data ) : self
-	{
-		$this->data[ $data->getType() ] = $data;	
-		
-		return $this;
-	}
-	//------------------------------------------------------------------------
 	public function emptyCart() : self
 	{
 		$this->data = [];
@@ -228,37 +221,31 @@ class cart implements totalInterface
 		$this->storageHandler->finalize();
 	}
 	//------------------------------------------------------------------------
+	public function addData( cartData $data ) : self
+	{
+		$this->data[$data->getType()]  = $data;	
+		
+		return $this;
+	}
+	//------------------------------------------------------------------------
 	public function getCartData() : array
 	{
 		return $this->data;
 	}
 	//------------------------------------------------------------------------
-	public function getDataByCartDataType( string $type ) 
+	public function hasCartDataType( string $type ) : bool
 	{
-		if( count($this->data) > 0 )
+		return array_key_exists( $type, $this->data );
+	}
+	//------------------------------------------------------------------------
+	public function getDataByType( string $type ) : array
+	{
+		if( ! $this->hasCartDataType( $type ) )
 		{
-			foreach( $this->data as $cartData )
-			{
-				if( $cartData->isValidType( $type ) == false )
-				{
-					throw new \Exception("Invalid card data type : ".$type, 1);
-				}
+			throw new \Exception( 'Invalid cart data type: ' . $type );
+		}
 
-				if( $cartData->getType() == $type )
-				{
-					return $cartData->getDataArray();
-				}
-				else
-				{
-					continue;
-				}
-			}
-			return [];
-		}
-		else
-		{
-			return (array) $this->data;
-		}
+		return $this->data[$type];
 	}
 	//------------------------------------------------------------------------
 	public function getCartItems() : array

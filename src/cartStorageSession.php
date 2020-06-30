@@ -40,9 +40,9 @@ class cartStorageSession implements cartStorageInterface
 
 		$_SESSION['cart_data'] = [];
 
-		foreach( $this->data as $data )
+		foreach( $data as $type => $_data )
 		{
-			$_SESSION['cart_data'][] = $data;
+			$_SESSION['cart_data'][$type] = $data->getForStorage();
 		}
 
 		return $this;
@@ -72,8 +72,9 @@ class cartStorageSession implements cartStorageInterface
 
 		$data = $_SESSION['cart_data'] ?? array();
 
-		foreach( $data as $cartData )
+		foreach( $data as $type => $cartData )
 		{
+			$cartData->setType( $type );
 			$cart->addData( $cartData );
 		}
 
