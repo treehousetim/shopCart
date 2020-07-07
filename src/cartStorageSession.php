@@ -26,7 +26,7 @@ class cartStorageSession implements cartStorageInterface
 
 		$_SESSION['cart_items'] = [];
 
-		foreach( $this->items as $item )
+		foreach( $items as $item )
 		{
 			$_SESSION['cart_items'][] = ['id' => $item->getProduct()->getId(), 'qty' => $item->getQty()];
 		}
@@ -51,6 +51,8 @@ class cartStorageSession implements cartStorageInterface
 	public function finalize( cart $cart ) : cartStorageInterface
 	{
 		// do nothing
+
+		return $this;
 	}
 	//------------------------------------------------------------------------
 	public function loadCart( cart $cart ) : cartStorageInterface

@@ -218,10 +218,10 @@ class cart implements totalInterface
 		$this->storageHandler->saveItems( $this->items );
 		$this->storageHandler->saveData( $this->data );
 
-		$this->storageHandler->finalize();
+		$this->storageHandler->finalize( $this );
 	}
 	//------------------------------------------------------------------------
-	public function addData( cartData $data ) : self
+	public function addData( iCartData $data ) : self
 	{
 		$this->data[$data->getType()]  = $data;	
 		

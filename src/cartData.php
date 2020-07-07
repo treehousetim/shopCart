@@ -1,7 +1,7 @@
 <?php namespace treehousetim\shopCart;
-use \stdClass, \Exception, \ReflectionClass;
+use \stdClass, \Exception;
 
-abstract class cartData implements jsonSerializable
+abstract class cartData implements jsonSerializable, iCartData
 {
 	protected $data;
 	protected $type;
