@@ -238,7 +238,7 @@ class cart implements totalInterface
 		return array_key_exists( $type, $this->data );
 	}
 	//------------------------------------------------------------------------
-	public function getDataByType( string $type ) : array
+	public function getDataByType( string $type ) : iCartData
 	{
 		if( ! $this->hasCartDataType( $type ) )
 		{
