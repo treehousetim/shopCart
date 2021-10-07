@@ -97,6 +97,8 @@ class cart implements totalInterface
 		$this->data = [];
 		$this->items = [];
 		$this->storageHandler->emptyCart( $this );
+
+		return $this;
 	}
 	//------------------------------------------------------------------------
 	public function populateTotalTypes() : self
@@ -169,7 +171,7 @@ class cart implements totalInterface
 	{
 		if( ! $this->hasItemForProductId( $id ) )
 		{
-			throw new Exception( 'No Item' );
+			throw new Exception( 'No Item', Exception::notItemErrorCode );
 		}
 	}
 	//------------------------------------------------------------------------
@@ -242,7 +244,7 @@ class cart implements totalInterface
 	{
 		if( ! $this->hasCartDataType( $type ) )
 		{
-			throw new \Exception( 'Invalid cart data type: ' . $type );
+			throw new Exception( 'Invalid cart data type: ' . $type, Exception::invalidDataTypeErrorCode  );
 		}
 
 		return $this->data[$type];

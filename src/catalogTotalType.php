@@ -23,7 +23,7 @@ class catalogTotalType
 			break;
 
 		default:
-			throw new \Exception( 'Unknown type: ' . $type );
+			throw new Exception( 'Unknown type: ' . $type, Exception::unknownTypeErrorCode );
 		}
 	}
 	//------------------------------------------------------------------------

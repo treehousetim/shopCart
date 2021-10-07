@@ -6,7 +6,7 @@ class cartStorageSession implements cartStorageInterface
 	{
 		if( session_status() != PHP_SESSION_ACTIVE )
 		{
-			throw new Exception( 'No Active Session' );
+			throw new Exception( 'No Active Session', Exception::noActiveSessionErrorCode );
 		}
 	}
 	//------------------------------------------------------------------------

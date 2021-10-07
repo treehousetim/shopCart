@@ -44,7 +44,7 @@ class catalog
 			return $this->products[$id];
 		}
 
-		throw new Exception( 'No Product' );
+		throw new Exception( 'No Product', Exception::notItemErrorCode );
 	}
 	//------------------------------------------------------------------------
 	public function hasProductId( $id ) : bool

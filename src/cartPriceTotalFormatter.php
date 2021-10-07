@@ -11,7 +11,7 @@ class cartPriceTotalFormatter implements totalFormatterInterface
 			break;
 
 		default:
-			throw new \Exception( 'Only price is supported in cartPriceTotalFormatter' );
+			throw new Exception( 'Only price is supported in cartPriceTotalFormatter', Exception::invalidFormatErrorCode );
 		}
 	}
 }

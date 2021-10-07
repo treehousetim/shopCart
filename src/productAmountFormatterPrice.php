@@ -9,6 +9,6 @@ class productAmountFormatterPrice extends productAmountFormatter
 			return formatting::moneyFormat( $product->getPrice() );
 		}
 
-		throw new \Exception( 'Unable to format ' . $this->type . ' using built in productAmountFormatterPrice class' );
+		throw new Exception( 'Unable to format ' . $this->type . ' using built in productAmountFormatterPrice class' );
 	}
 }
