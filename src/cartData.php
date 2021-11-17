@@ -1,5 +1,5 @@
 <?php namespace treehousetim\shopCart;
-use \stdClass, \Exception;
+use \stdClass;
 
 abstract class cartData implements jsonSerializable, iCartData
 {

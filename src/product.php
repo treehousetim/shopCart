@@ -123,6 +123,6 @@ abstract class product
 			return $this->price;
 		}
 
-		throw new \Exception( 'Unknown catalog total type: ' . $type->getType() );
+		throw new Exception( 'Unknown catalog total type: ' . $type->getType(), Exception::unknownTypeErrorCode );
 	}
 }
