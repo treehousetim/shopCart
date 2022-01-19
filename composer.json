@@ -1,7 +1,7 @@
 {
     "name": "treehousetim/shopcart",
     "description": "A simple, zero-dependency, zero UI, Shopping Cart library.",
-    "type": "project",
+    "type": "library",
     "license": "MIT",
     "authors": [
         {
