@@ -75,6 +75,18 @@ class cart implements totalInterface
 		return $this;
 	}
 	//------------------------------------------------------------------------
+	public function removeData( string $type ) : self
+	{
+		if( ! $this->hasCartDataType( $type ) )
+		{
+			throw new Exception( 'Invalid cart data type: ' . $type, Exception::invalidDataTypeErrorCode  );
+		}
+
+		unset( $this->data[ $type ] );
+		
+		return $this;
+	}
+	//------------------------------------------------------------------------
 	public function addProduct( product $product, $qty ) : self
 	{
 		if( $this->hasItemForProductId( $product->getId() ) )
