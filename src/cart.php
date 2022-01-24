@@ -75,7 +75,7 @@ class cart implements totalInterface
 		return $this;
 	}
 	//------------------------------------------------------------------------
-	public function removeData( string $type ) : self
+	public function removeDataByType( string $type ) : self
 	{
 		if( ! $this->hasCartDataType( $type ) )
 		{
