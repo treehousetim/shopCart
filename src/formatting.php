@@ -5,12 +5,12 @@ class formatting
 	public static $longScale = 6;
 	public static function longNumberFormat( $number )
 	{
-		return number_format( $number, self::longScale );
+		return number_format( $number, self::$longScale );
 	}
 	//------------------------------------------------------------------------
 	public static function unitFormat( $number, $unit )
 	{
-		return longNumberFormat( $number ) . ' ' . $unit;
+		return self::longNumberFormat( $number ) . ' ' . $unit;
 	}
 	//------------------------------------------------------------------------
 	public static function unitFormatAutoScale( $number, $unit )

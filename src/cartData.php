@@ -1,12 +1,13 @@
 <?php namespace treehousetim\shopCart;
 use \stdClass;
 
-abstract class cartData implements jsonSerializable, iCartData
+abstract class cartData implements \JsonSerializable, iCartData
 {
 	protected $data;
 	protected $type;
 
 	//------------------------------------------------------------------------
+	#[\ReturnTypeWillChange]
 	abstract public function jsonSerialize();
 	//------------------------------------------------------------------------
 	public function getForStorage()

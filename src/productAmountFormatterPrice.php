@@ -4,7 +4,7 @@ class productAmountFormatterPrice extends productAmountFormatter
 {
 	public function format( product $product ) : string
 	{
-		if( $this->type == productAmountFormatter::tPrice )
+		if( $this->type == productAmountFormatter::tPRICE )
 		{
 			return formatting::moneyFormat( $product->getPrice() );
 		}

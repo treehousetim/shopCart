@@ -20,7 +20,7 @@ class cartStorageSession implements cartStorageInterface
 		return $this;
 	}
 	//------------------------------------------------------------------------
-	public function saveItems( array $items )
+	public function saveItems( array $items ) : cartStorageInterface
 	{
 		$this->checkSess();
 
@@ -34,7 +34,7 @@ class cartStorageSession implements cartStorageInterface
 		return $this;
 	}
 	//------------------------------------------------------------------------
-	public function saveData( array $data )
+	public function saveData( array $data ) : cartStorageInterface
 	{
 		$this->checkSess();
 
@@ -42,7 +42,7 @@ class cartStorageSession implements cartStorageInterface
 
 		foreach( $data as $type => $_data )
 		{
-			$_SESSION['cart_data'][$type] = $data->getForStorage();
+			$_SESSION['cart_data'][$type] = $_data->getForStorage();
 		}
 
 		return $this;

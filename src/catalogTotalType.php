@@ -65,7 +65,7 @@ class catalogTotalType
 		return $this->productField;
 	} 
 	//------------------------------------------------------------------------
-	public function setFormatter( shopCartTotalFormatterInterface $formatter ) : self
+	public function setFormatter( totalFormatterInterface $formatter ) : self
 	{
 		$this->formatter = $formatter;
 		return $this;

@@ -40,7 +40,7 @@ class cart implements totalInterface
 	//------------------------------------------------------------------------
 	public function setTotalTypeLoader( catalogTotalTypeLoaderInterface $loader ) : self
 	{
-		$this->typeLoader = $loader;
+		$this->totalTypeLoader = $loader;
 		$this->populateTotalTypes();
 		return $this;
 	}
@@ -115,13 +115,13 @@ class cart implements totalInterface
 	//------------------------------------------------------------------------
 	public function populateTotalTypes() : self
 	{
-		$this->typeLoader->resetType();
+		$this->totalTypeLoader->resetType();
 		$this->totalTypes = [];
 		do
 		{
-			$type = $this->typeLoader->getType();
+			$type = $this->totalTypeLoader->getType();
 			$this->totalTypes[] = $type;
-		} while( $this->typeLoader->nextType() );
+		} while( $this->totalTypeLoader->nextType() );
 
 		return $this;
 	}
