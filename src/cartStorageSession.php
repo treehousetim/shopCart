@@ -40,9 +40,11 @@ class cartStorageSession implements cartStorageInterface
 
 		$_SESSION['cart_data'] = [];
 
+		// the objects themselves are stored; php serializes them with the session.
+		// loadCart() hands them straight back to cart::addData()
 		foreach( $data as $type => $_data )
 		{
-			$_SESSION['cart_data'][$type] = $_data->getForStorage();
+			$_SESSION['cart_data'][$type] = $_data;
 		}
 
 		return $this;
@@ -74,9 +76,8 @@ class cartStorageSession implements cartStorageInterface
 
 		$data = $_SESSION['cart_data'] ?? array();
 
-		foreach( $data as $type => $cartData )
+		foreach( $data as $cartData )
 		{
-			$cartData->setType( $type );
 			$cart->addData( $cartData );
 		}
 

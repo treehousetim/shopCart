@@ -21,7 +21,15 @@ class formatting
 			$sign = '-';
 		}
 
-		return '<span class="number">' . $sign . trim( $number, ' -0' ) . '</span> <span class="units">' . $unit . '</unit';
+		$number = ltrim( $number, ' -' );
+
+		// only trim insignificant trailing zeros after a decimal point
+		if( strpos( $number, '.' ) !== false )
+		{
+			$number = rtrim( rtrim( $number, '0' ), '.' );
+		}
+
+		return '<span class="number">' . $sign . $number . '</span> <span class="units">' . $unit . '</span>';
 	}
 	//------------------------------------------------------------------------
 	public static function moneyFormat( float $number, $decimals = 2 )

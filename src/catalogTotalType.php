@@ -71,9 +71,9 @@ class catalogTotalType
 		return $this;
 	}
 	//------------------------------------------------------------------------
-	public function format()
+	public function format( string $value )
 	{
-		$this->formatter->formatTotalType( $this );
+		return $this->formatter->formatTotalType( $value, $this );
 	}
 	//------------------------------------------------------------------------
 	public function setIdentifier( string $id ) : self

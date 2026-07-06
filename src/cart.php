@@ -5,10 +5,6 @@ class cart implements totalInterface
 	protected $items = [];
 	protected $data = [];
 
-	public $productsByMetal = [];
-	protected $totals = [];
-	protected $metalsCollection;
-
 	public $totalTypes = [];
 	protected $totalTypeLoader;
 
@@ -138,20 +134,10 @@ class cart implements totalInterface
 
 		foreach( $this->items as $item )
 		{
-			$total = bcadd( $item->getTotalTypeAmount( $type ), $total );
+			$total = bcadd( $item->getTotalTypeAmount( $type ), $total, formatting::$longScale );
 		}
 
 		return $total;
-	}
-	//------------------------------------------------------------------------
-	public function getAmountOrdered( catalogTotalType $type ) : string 
-	{
-		$amountOrdered = 0;
-		foreach ($this->items as $item) 
-		{
-			$amountOrdered = $item->getTotalAmount( $type );
-		}
-		return $amountOrdered;
 	}
 	//------------------------------------------------------------------------
 	public function getAmountTotal( catalogTotalType $type ) : string
@@ -159,7 +145,7 @@ class cart implements totalInterface
 		$totalAmount = 0;
 		foreach ($this->items as $item) 
 		{
-			$totalAmount = bcadd($item->getTotalAmount( $type ), $totalAmount );
+			$totalAmount = bcadd( $item->getTotalAmount( $type ), $totalAmount, formatting::$longScale );
 		}
 		return $totalAmount;
 	}
@@ -208,17 +194,6 @@ class cart implements totalInterface
 	{
 		$this->requireProductId( $id );
 		$this->getItemByProductId( $id )->updateQty( $qty );
-	}
-	//------------------------------------------------------------------------
-	public function populate()
-	{
-		$model = new productModel();
-		$rows = $model->fetchAll();
-
-		foreach( $rows as $product )
-		{
-			$this->addItem( new cartItem( $product ) );
-		}
 	}
 	//------------------------------------------------------------------------
 	public function load() : self

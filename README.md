@@ -94,7 +94,6 @@ class totalTypeLoader implements catalogTotalTypeLoaderInterface
 			->setUnit( 'points' )
 			->setLabel( 'Point' )
 			->setProductField( 'productPoints' );
-		}
 	}
 	//------------------------------------------------------------------------
 	public function nextType() : bool

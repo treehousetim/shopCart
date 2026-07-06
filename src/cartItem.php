@@ -44,21 +44,16 @@ class cartItem
 	//------------------------------------------------------------------------
 	public function getTotalAmount( catalogTotalType $type ) : string
 	{
-		return bcmul( $this->qty, $this->product->getAmountForCatalogTotalType( $type ) );
+		return bcmul( $this->qty, $this->product->getAmountForCatalogTotalType( $type ), formatting::$longScale );
 	}
 	//------------------------------------------------------------------------
 	public function getTotalTypeAmount( catalogTotalType $type ) : string
 	{
 		if( $this->product->getTotalTypeIdentifier() == $type->getIdentifier() )
 		{
-			return bcmul( $this->qty, $this->product->getAmountForCatalogTotalType( $type ) );
+			return bcmul( $this->qty, $this->product->getAmountForCatalogTotalType( $type ), formatting::$longScale );
 		}
 
 		return '0';
-	}
-	//------------------------------------------------------------------------
-	public function formatTotalType( string $value, string $type, array $params )
-	{
-		return $this->product->formatTotalType( $value, $type, $params );
 	}
 }

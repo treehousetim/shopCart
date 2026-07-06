@@ -15,7 +15,7 @@ abstract class productAmountFormatter
 	//------------------------------------------------------------------------
 	public function formatCartItemPrice( cartItem $cartItem ) : string
 	{
-		return formatting::moneyFormat( bcmul( $cartItem->getQty(), $cartItem->getProduct()->getPrice() ) );
+		return formatting::moneyFormat( bcmul( $cartItem->getQty(), $cartItem->getProduct()->getPrice(), formatting::$longScale ) );
 	}
 	//------------------------------------------------------------------------
 	public function formatCartTotalPrice( string $total ): string

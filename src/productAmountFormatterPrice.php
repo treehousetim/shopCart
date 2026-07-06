@@ -2,13 +2,29 @@
 
 class productAmountFormatterPrice extends productAmountFormatter
 {
-	public function format( product $product ) : string
+	public function formatProduct( string $type, product $product ) : string
 	{
-		if( $this->type == productAmountFormatter::tPRICE )
+		$this->requirePriceType( $type );
+		return $this->formatProductPrice( $product );
+	}
+	//------------------------------------------------------------------------
+	public function formatCartItem( string $type, cartItem $cartItem ) : string
+	{
+		$this->requirePriceType( $type );
+		return $this->formatCartItemPrice( $cartItem );
+	}
+	//------------------------------------------------------------------------
+	public function formatCartTotal( catalogTotalType $type, string $total ) : string
+	{
+		$this->requirePriceType( $type->getType() );
+		return $this->formatCartTotalPrice( $total );
+	}
+	//------------------------------------------------------------------------
+	protected function requirePriceType( string $type )
+	{
+		if( $type != self::tPRICE )
 		{
-			return formatting::moneyFormat( $product->getPrice() );
+			throw new Exception( 'Unable to format ' . $type . ' using built in productAmountFormatterPrice class', Exception::invalidFormatErrorCode );
 		}
-
-		throw new Exception( 'Unable to format ' . $this->type . ' using built in productAmountFormatterPrice class' );
 	}
 }
