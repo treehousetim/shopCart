@@ -87,6 +87,11 @@ class cart implements totalInterface
 	{
 		if( $this->hasItemForProductId( $product->getId() ) )
 		{
+			if( $product->isSerialized() )
+			{
+				throw new Exception( 'Serialized item already in cart: ' . $product->getId(), Exception::duplicateSerialErrorCode );
+			}
+
 			$cartItem = $this->getItemByProductId( $product->getId() );
 			$cartItem->addQty( $qty );
 		}

@@ -7,4 +7,8 @@ class Exception extends \treehousetim\exception\Exception
 	const invalidFormatErrorCode = 3;
 	const noActiveSessionErrorCode = 4;
 	const unknownTypeErrorCode = 5;
+	const noSuchAttributeErrorCode = 6;
+	const duplicateSerialErrorCode = 7;
+	const serializedQtyErrorCode = 8;
+	const noSuchFieldAmountErrorCode = 9;
 }

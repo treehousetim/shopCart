@@ -119,6 +119,87 @@ class totalTypeLoader implements catalogTotalTypeLoaderInterface
 }
 ```
 
+## Product Variations
+
+A product can have variations along arbitrary attributes (color, size, …) using
+`productVariation`. A variation wraps a parent `product` and falls back to the
+parent for anything you don't override — name, description, image, category,
+formatter, total type identifier, and price.
+
+Every variation is itself a `product`: give it a unique id and add it to the
+catalog alongside its parent. Because cart items are keyed by product id and
+`cartStorageSession` re-resolves products from the catalog on load, this is all
+that's needed for variations to survive a save/load round trip.
+
+```php
+use treehousetim\shopCart\productVariation;
+
+$shirt = ( new myProduct() )
+	->setId( 'shirt' )
+	->setName( 'T-Shirt' )
+	->setPrice( '20.00' );
+
+$shirtXL = ( new productVariation( $shirt ) )
+	->setAttribute( 'size', 'XL' )
+	->setAttribute( 'color', 'blue' )
+	->setId( 'shirt-xl-blue' )
+	->setPrice( '24.50' );     // optional — omit to inherit the parent's price
+
+$catalog->addProduct( $shirt )->addProduct( $shirtXL );
+
+$shirtXL->getAttribute( 'size' );  // 'XL' (unknown names throw
+                                   // Exception::noSuchAttributeErrorCode)
+$shirtXL->getAttributes();         // ['size' => 'XL', 'color' => 'blue']
+```
+
+For carts with multiple total types, a variation can also override the per-unit
+amount of any `catalogTotalType::tPRODUCT_FIELD` dimension with
+`setFieldAmount( $productField, $amount )`. When no field amount is set for a
+dimension, `getAmountForCatalogTotalType()` delegates to the parent product.
+
+## Serialized Variations
+
+`productVariationSerialized` models variations where each unit is a distinct
+physical item identified by a serial number. Rules enforced by the library:
+
+- **Quantity is always exactly 1 per serial.** `cart::addProduct()` with a
+  quantity other than 1, or `cart::updateItemQty()` to anything other than 1,
+  throws `Exception::serializedQtyErrorCode`.
+- **Adding the same serial twice throws** `Exception::duplicateSerialErrorCode`
+  (an exception rather than a silent no-op, so the UI can tell the shopper the
+  unit is already in the cart). The cart is left unchanged.
+- **Id resolution:** if you don't call `setId()`, the id is derived as
+  `parentId . ':' . serialNumber`, so each unit is unique in the catalog and
+  the session round trip works unchanged. Add every serialized unit to the
+  catalog like any other product.
+
+Each serialized unit can carry its own amount for *each* total type — its own
+price and its own per-unit amount for any `tPRODUCT_FIELD` dimension — so two
+serials of the same product can total differently in every dimension:
+
+```php
+use treehousetim\shopCart\productVariationSerialized;
+
+$unitA = ( new productVariationSerialized( $collectible ) )
+	->setSerialNumber( 'SN-0001' )
+	->setPrice( '102.75' )
+	->setFieldAmount( 'points', '7.5' );
+
+$unitB = ( new productVariationSerialized( $collectible ) )
+	->setSerialNumber( 'SN-0002' )
+	->setPrice( '99.10' )
+	->setFieldAmount( 'points', '3.25' );
+
+$catalog->addProduct( $unitA )->addProduct( $unitB );
+
+$cart->addProduct( $unitA, 1 );    // qty must be exactly 1
+$cart->addProduct( $unitB, 1 );
+// cart::getAmountTotal()/getTotal() now sum the per-serial amounts
+```
+
+`product::isSerialized()` (false on every product except serialized variations)
+lets storage handlers and UIs detect these items generically.
+
 ## totalFormatterInterface
 
 ```php
@@ -130,8 +211,8 @@ interface totalFormatterInterface
 
 
 ## Testing
-If you have cloned this repo, you can run the tests (there are none yet).
+If you have cloned this repo, you can run the tests.
 There are no dependencies, but PHPUnit is installed with composer.
 
 1. `composer install`
-2. `./vendor/bin/phpunit --bootstrap vendor/autoload.php test`
+2. `./vendor/bin/phpunit`

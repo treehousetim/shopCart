@@ -11,18 +11,29 @@ class cartItem
 		$this->qty = 0;
 	}
 	//------------------------------------------------------------------------
+	protected function requireValidQty( $qty )
+	{
+		if( $this->product->isSerialized() && $qty != 1 )
+		{
+			throw new Exception( 'Serialized items must have a quantity of exactly 1', Exception::serializedQtyErrorCode );
+		}
+	}
+	//------------------------------------------------------------------------
 	public function updateQty( $qty )
 	{
+		$this->requireValidQty( $qty );
 		$this->qty = $qty;
 	}
 	//------------------------------------------------------------------------
 	public function addQty( $qty )
 	{
+		$this->requireValidQty( $this->qty + $qty );
 		$this->qty += $qty;
 	}
 	//------------------------------------------------------------------------
 	public function setQty( int $qty ) : self
 	{
+		$this->requireValidQty( $qty );
 		$this->qty = $qty;
 		return $this;
 	}

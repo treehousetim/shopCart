@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Product variations** — new `productVariation` class (extends `product`).
+  A variation wraps a parent product, carries arbitrary attribute name/value
+  pairs (`setAttribute()`/`getAttribute()`/`hasAttribute()`/`getAttributes()`),
+  and falls back to the parent for any unset value: name, short description,
+  image, category, formatter, total type identifier, and price. A price set on
+  the variation overrides the parent's. `setFieldAmount( $field, $amount )`
+  overrides the per-unit amount of any `catalogTotalType::tPRODUCT_FIELD`
+  dimension; unset dimensions delegate to the parent's
+  `getAmountForCatalogTotalType()`. Variations are ordinary catalog products —
+  give each a unique id and `catalog::addProduct()` it — so the
+  `cartStorageSession` id/qty round trip works unchanged.
+- **Serialized variations** — new `productVariationSerialized` class (extends
+  `productVariation`) for variations where every unit is a distinct physical
+  item identified by a serial number. Quantity per serial is always exactly 1:
+  adding the same serial to a cart twice throws
+  `Exception::duplicateSerialErrorCode` (the cart is left unchanged), and any
+  attempt to set a serialized item's quantity to anything other than 1
+  (`cart::addProduct()` qty, `cart::updateItemQty()`,
+  `cartItem::setQty()`/`updateQty()`/`addQty()`) throws
+  `Exception::serializedQtyErrorCode`. When no id is set explicitly, the id is
+  derived as `parentId . ':' . serialNumber`. Each unit can carry its own
+  price and its own `setFieldAmount()` per `tPRODUCT_FIELD` dimension, so two
+  serials of the same product can total differently in every dimension.
+- `product::isSerialized()` — returns `false` on every product except
+  serialized variations; lets carts, storage handlers, and UIs treat
+  serialized items generically.
+- New `Exception` error codes: `noSuchAttributeErrorCode` (6),
+  `duplicateSerialErrorCode` (7), `serializedQtyErrorCode` (8),
+  `noSuchFieldAmountErrorCode` (9).
+- PHPUnit test suite under `test/` (variations, serialized variations, session
+  storage round trip) and a `phpunit.xml.dist` at the repo root; run with
+  `./vendor/bin/phpunit`.
+
 ### Fixed
 
 - **Totals silently truncated to whole numbers.** Every `bcmul()`/`bcadd()`
