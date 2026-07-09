@@ -1,9 +1,17 @@
 # Critter Chow — shopCart example
 
-A minimal one-file pet food store showing the library end to end: a static
-catalog (dog, cat, parrot, and bear food), session-backed cart storage,
+A minimal pet food store showing the library end to end: a static catalog
+(dog, cat, parrot, and bear food), session-backed cart storage,
 add/update/remove/empty actions, a dual-currency catalog (dollars and ⭐),
-and a depositable star balance carried as cart data.
+a depositable star balance carried as cart data, and a checkout page that
+validates the order, charges the star balance, and confirms with an order
+number.
+
+- `bootstrap.php` — shared wiring: product/formatter/cart-data subclasses,
+  total types, catalog, and cart
+- `index.php` — the storefront and cart
+- `checkout.php` — order summary, validation, and confirmation (the "order"
+  is stored in the session only; there is no backend)
 
 This directory is `export-ignore`d, so it never ships in the composer dist
 package — it only exists in the git repo.
