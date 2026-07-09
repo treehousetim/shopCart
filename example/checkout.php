@@ -3,31 +3,69 @@
 use treehousetim\shopCart\productAmountFormatterPrice;
 
 require __DIR__ . '/bootstrap.php';
+require __DIR__ . '/gateway.php';
 
 $starCost = $cart->getAmountTotal( $starsTotal );
 $balance = getStarBalance( $cart );
 $shortfall = bcsub( $starCost, $balance, 0 );
 $errors = [];
+$cancelled = false;
+$gateway = paymentGateway();
 
-// ---------------------------------------------------------------- place order (post/redirect/get)
+// Stripe requires absolute success/cancel URLs, so build one for this page
+$checkoutUrl = ( ( $_SERVER['HTTPS'] ?? '' ) === 'on' ? 'https' : 'http' )
+	. '://' . $_SERVER['HTTP_HOST']
+	. strtok( $_SERVER['REQUEST_URI'], '?' );
+
+// the checkout form fields; street2 is the only optional one
+$fields = [ 'name' => '', 'email' => '', 'street1' => '', 'street2' => '', 'city' => '', 'state' => '', 'postal' => '', 'country' => '' ];
+
+foreach( $fields as $field => $unused )
+{
+	$fields[$field] = trim( $_POST[$field] ?? '' );
+}
+
+// ---------------------------------------------------------------- start payment (post/redirect/get)
 if( $_SERVER['REQUEST_METHOD'] === 'POST' )
 {
-	$name = trim( $_POST['name'] ?? '' );
-	$email = trim( $_POST['email'] ?? '' );
-
 	if( ! $cart->getCartItems() )
 	{
 		$errors[] = 'Your cart is empty.';
 	}
 
-	if( $name === '' )
+	if( $fields['name'] === '' )
 	{
 		$errors[] = 'Name is required.';
 	}
 
-	if( ! filter_var( $email, FILTER_VALIDATE_EMAIL ) )
+	if( ! filter_var( $fields['email'], FILTER_VALIDATE_EMAIL ) )
 	{
 		$errors[] = 'A valid email is required.';
+	}
+
+	if( $fields['street1'] === '' )
+	{
+		$errors[] = 'Street address is required.';
+	}
+
+	if( $fields['city'] === '' )
+	{
+		$errors[] = 'City is required.';
+	}
+
+	if( $fields['state'] === '' )
+	{
+		$errors[] = 'State / province is required.';
+	}
+
+	if( $fields['postal'] === '' )
+	{
+		$errors[] = 'Postal code is required.';
+	}
+
+	if( $fields['country'] === '' )
+	{
+		$errors[] = 'Country is required.';
 	}
 
 	if( bccomp( $shortfall, '0' ) > 0 )
@@ -38,6 +76,7 @@ if( $_SERVER['REQUEST_METHOD'] === 'POST' )
 	if( ! $errors )
 	{
 		$lines = [];
+
 		foreach( $cart->getCartItems() as $item )
 		{
 			$lines[] = [
@@ -48,33 +87,82 @@ if( $_SERVER['REQUEST_METHOD'] === 'POST' )
 			];
 		}
 
-		// the "order" lives in the session only — this example has no backend
-		$_SESSION['last_order'] = [
+		// Stage the order in the session but charge NOTHING yet.  With a real
+		// gateway the customer leaves this site to pay; the stars are deducted
+		// and the cart emptied only when they come back to ?placed=1.  The
+		// "order" lives in the session only — this example has no backend.
+		$_SESSION['pending_order'] = [
 			'number' => 'CC-' . strtoupper( bin2hex( random_bytes( 4 ) ) ),
-			'name' => $name,
-			'email' => $email,
+			'name' => $fields['name'],
+			'email' => $fields['email'],
+			'address' => [
+				'street1' => $fields['street1'],
+				'street2' => $fields['street2'],
+				'city' => $fields['city'],
+				'state' => $fields['state'],
+				'postal' => $fields['postal'],
+				'country' => $fields['country'],
+			],
 			'lines' => $lines,
 			'total' => $cart->getTotalFormatted( $priceTotal ),
 			'starCost' => $starsTotal->format( $starCost ),
+			'starCostRaw' => $starCost,
+			'gateway' => $gateway->getName(),
 		];
 
-		// pay the stars, then empty the cart (emptyCart() clears cart data,
-		// so the remaining balance is re-added afterward)
-		$newBalance = bcsub( $balance, $starCost, 0 );
+		try
+		{
+			// testGateway sends us straight to ?placed=1; stripeGateway sends
+			// the customer to Stripe's hosted payment page first
+			$redirectUrl = $gateway->createPayment(
+				$cart,
+				$_SESSION['pending_order'],
+				$checkoutUrl . '?placed=1',
+				$checkoutUrl . '?cancelled=1'
+			);
+
+			header( 'Location: ' . $redirectUrl );
+			exit;
+		}
+		catch( Exception $e )
+		{
+			unset( $_SESSION['pending_order'] );
+			$errors[] = 'Payment could not be started: ' . $e->getMessage();
+		}
+	}
+}
+
+// ---------------------------------------------------------------- payment outcome
+$placedOrder = null;
+
+if( isset( $_GET['placed'] ) )
+{
+	if( isset( $_SESSION['pending_order'] ) )
+	{
+		// the gateway reported success — NOW pay the stars and empty the cart
+		// (emptyCart() clears cart data, so the remaining balance is re-added)
+		$pending = $_SESSION['pending_order'];
+
+		$newBalance = bcsub( getStarBalance( $cart ), $pending['starCostRaw'], 0 );
 		$cart->emptyCart();
 		$cart->addData( ( new starBalance() )->setData( $newBalance ) );
 		$cart->save();
 
-		header( 'Location: checkout.php?placed=1' );
-		exit;
+		$_SESSION['last_order'] = $pending;
+		unset( $_SESSION['pending_order'] );
+	}
+
+	if( isset( $_SESSION['last_order'] ) )
+	{
+		$placedOrder = $_SESSION['last_order'];
 	}
 }
-
-$placedOrder = null;
-
-if( isset( $_GET['placed'] ) && isset( $_SESSION['last_order'] ) )
+elseif( isset( $_GET['cancelled'] ) )
 {
-	$placedOrder = $_SESSION['last_order'];
+	// the customer backed out at the gateway: no order, no star charge,
+	// and the cart is left exactly as it was
+	unset( $_SESSION['pending_order'] );
+	$cancelled = true;
 }
 ?>
 <!DOCTYPE html>
@@ -92,9 +180,13 @@ if( isset( $_GET['placed'] ) && isset( $_SESSION['last_order'] ) )
 	tfoot td { font-weight: bold; border-top: 2px solid #222; }
 	label { display: block; margin-top: .75rem; }
 	input[type=text], input[type=email] { width: 100%; padding: .4rem; box-sizing: border-box; }
+	.row { display: flex; gap: 1rem; }
+	.row label { flex: 1; }
 	button { cursor: pointer; margin-top: 1rem; padding: .5rem 1.5rem; background: #222; color: #fff; border: 0; border-radius: .3rem; }
 	.errors { background: #fee; border: 1px solid #c00; border-radius: .3rem; padding: .5rem 1rem; }
 	.confirmation { background: #efe; border: 1px solid #0a0; border-radius: .3rem; padding: .5rem 1rem; }
+	.notice { background: #ffd; border: 1px solid #ca0; border-radius: .3rem; padding: .5rem 1rem; }
+	.gateway { color: #666; font-size: .9rem; }
 </style>
 </head>
 <body>
@@ -110,6 +202,15 @@ if( isset( $_GET['placed'] ) && isset( $_SESSION['last_order'] ) )
 	<h2>Thanks, <?= htmlspecialchars( $placedOrder['name'] ) ?>! 🎉</h2>
 	<p>Order <strong><?= htmlspecialchars( $placedOrder['number'] ) ?></strong> is confirmed.
 	A receipt is on its way to <?= htmlspecialchars( $placedOrder['email'] ) ?>.</p>
+	<?php if( ! empty( $placedOrder['address'] ) ): $address = $placedOrder['address']; ?>
+	<p>Shipping to:<br>
+		<?= htmlspecialchars( $address['street1'] ) ?><br>
+		<?php if( $address['street2'] !== '' ): ?><?= htmlspecialchars( $address['street2'] ) ?><br><?php endif ?>
+		<?= htmlspecialchars( $address['city'] ) ?>, <?= htmlspecialchars( $address['state'] ) ?> <?= htmlspecialchars( $address['postal'] ) ?><br>
+		<?= htmlspecialchars( $address['country'] ) ?>
+	</p>
+	<?php endif ?>
+	<p class="gateway">Payment handled by <?= htmlspecialchars( $placedOrder['gateway'] ?? 'unknown gateway' ) ?>.</p>
 </div>
 
 <table>
@@ -140,10 +241,23 @@ if( isset( $_GET['placed'] ) && isset( $_SESSION['last_order'] ) )
 
 <?php elseif( ! $cart->getCartItems() ): ?>
 
+<?php if( $cancelled ): ?>
+<div class="notice">
+	<p>Payment cancelled — no worries, nothing was charged and no ⭐ were spent.</p>
+</div>
+<?php endif ?>
+
 <p>Your cart is empty — nothing to check out.</p>
 <p><a href="index.php">← Back to the store</a></p>
 
 <?php else: ?>
+
+<?php if( $cancelled ): ?>
+<div class="notice">
+	<p>Payment cancelled — no worries, nothing was charged and no ⭐ were spent.
+	Your cart is still intact below if you'd like to try again.</p>
+</div>
+<?php endif ?>
 
 <?php if( $errors ): ?>
 <div class="errors">
@@ -187,12 +301,38 @@ if( isset( $_GET['placed'] ) && isset( $_SESSION['last_order'] ) )
 <h2>Your Details</h2>
 <form method="post">
 	<label>Name
-		<input type="text" name="name" value="<?= htmlspecialchars( $_POST['name'] ?? '' ) ?>" required>
+		<input type="text" name="name" value="<?= htmlspecialchars( $fields['name'] ) ?>" required>
 	</label>
 	<label>Email
-		<input type="email" name="email" value="<?= htmlspecialchars( $_POST['email'] ?? '' ) ?>" required>
+		<input type="email" name="email" value="<?= htmlspecialchars( $fields['email'] ) ?>" required>
 	</label>
-	<button type="submit">Place order (dollars on delivery, stars now)</button>
+
+	<h2>Shipping Address</h2>
+	<label>Street Address
+		<input type="text" name="street1" value="<?= htmlspecialchars( $fields['street1'] ) ?>" required>
+	</label>
+	<label>Street Address 2 <small>(optional)</small>
+		<input type="text" name="street2" value="<?= htmlspecialchars( $fields['street2'] ) ?>">
+	</label>
+	<div class="row">
+		<label>City
+			<input type="text" name="city" value="<?= htmlspecialchars( $fields['city'] ) ?>" required>
+		</label>
+		<label>State / Province
+			<input type="text" name="state" value="<?= htmlspecialchars( $fields['state'] ) ?>" required>
+		</label>
+	</div>
+	<div class="row">
+		<label>Postal Code
+			<input type="text" name="postal" value="<?= htmlspecialchars( $fields['postal'] ) ?>" required>
+		</label>
+		<label>Country
+			<input type="text" name="country" value="<?= htmlspecialchars( $fields['country'] ) ?>" required>
+		</label>
+	</div>
+
+	<button type="submit">Pay <?= $cart->getTotalFormatted( $priceTotal ) ?> + <?= $starsTotal->format( $starCost ) ?></button>
+	<p class="gateway">Payments handled by <?= htmlspecialchars( $gateway->getName() ) ?>.</p>
 </form>
 
 <p><a href="index.php">← Back to the store</a></p>

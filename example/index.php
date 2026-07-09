@@ -46,8 +46,62 @@ if( $_SERVER['REQUEST_METHOD'] === 'POST' )
 
 	$cart->save();
 
-	header( 'Location: ' . $_SERVER['PHP_SELF'] );
+	// forms post back to the current url, so redirecting to REQUEST_URI
+	// preserves any active category filter and search
+	header( 'Location: ' . $_SERVER['REQUEST_URI'] );
 	exit;
+}
+
+// ---------------------------------------------------------------- catalog filtering (GET)
+$filterCategory = trim( $_GET['category'] ?? '' );
+$search = trim( $_GET['q'] ?? '' );
+
+// unique categories in catalog order
+$categories = [];
+
+foreach( $catalog->getProducts() as $product )
+{
+	if( ! in_array( $product->getCategory(), $categories, true ) )
+	{
+		$categories[] = $product->getCategory();
+	}
+}
+
+// an unknown ?category= value just means nothing matches "exactly"; treat it as All
+if( $filterCategory !== '' && ! in_array( $filterCategory, $categories, true ) )
+{
+	$filterCategory = '';
+}
+
+function productMatches( petSupplyProduct $product, string $category, string $search ) : bool
+{
+	if( $category !== '' && $product->getCategory() !== $category )
+	{
+		return false;
+	}
+
+	if( $search !== '' && stripos( $product->getName() . ' ' . $product->getShortDesc(), $search ) === false )
+	{
+		return false;
+	}
+
+	return true;
+}
+//------------------------------------------------------------------------
+function filterUrl( string $category, string $search ) : string
+{
+	$params = array_filter( [ 'category' => $category, 'q' => $search ] );
+	return 'index.php' . ( $params ? '?' . http_build_query( $params ) : '' );
+}
+
+$visibleProducts = [];
+
+foreach( $catalog->getProducts() as $product )
+{
+	if( productMatches( $product, $filterCategory, $search ) )
+	{
+		$visibleProducts[] = $product;
+	}
 }
 ?>
 <!DOCTYPE html>
@@ -55,15 +109,25 @@ if( $_SERVER['REQUEST_METHOD'] === 'POST' )
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Critter Chow — shopCart example</title>
+<title>Critter Supply Co. — shopCart example</title>
 <style>
 	body { font-family: system-ui, sans-serif; margin: 0 auto; max-width: 60rem; padding: 1rem; color: #222; }
-	header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #222; margin-bottom: 1.5rem; }
+	header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: .5rem; border-bottom: 2px solid #222; margin-bottom: 1.5rem; padding-bottom: .5rem; }
+	header h1 { margin: 0; }
+	.filters { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-bottom: 1rem; }
+	.filters a { padding: .3rem .8rem; border: 1px solid #ccc; border-radius: 1rem; text-decoration: none; color: #222; font-size: .9rem; }
+	.filters a:hover { border-color: #222; }
+	.filters a.active { background: #222; border-color: #222; color: #fff; }
+	.search { display: flex; gap: .4rem; margin-left: auto; }
+	.search input[type=search] { padding: .3rem .6rem; border: 1px solid #ccc; border-radius: 1rem; }
+	.result-note { color: #555; font-size: .9rem; margin: 0 0 1rem; }
 	.products { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 1rem; }
-	.card { border: 1px solid #ccc; border-radius: .5rem; padding: 1rem; text-align: center; }
+	.card { border: 1px solid #ccc; border-radius: .5rem; padding: 1rem; text-align: center; display: flex; flex-direction: column; }
+	.card:hover { border-color: #999; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
 	.card .emoji { font-size: 3rem; }
+	.card .category { display: inline-block; margin: 0 auto; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: #555; background: #f0f0f0; border-radius: 1rem; padding: .15rem .6rem; }
 	.card h4 { margin: .5rem 0 .25rem; }
-	.card p { min-height: 3em; font-size: .85rem; color: #555; }
+	.card p { min-height: 3em; font-size: .85rem; color: #555; flex-grow: 1; }
 	.card .cost { margin-bottom: .5rem; }
 	table { width: 100%; border-collapse: collapse; margin-top: .5rem; }
 	th, td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid #ddd; }
@@ -77,7 +141,7 @@ if( $_SERVER['REQUEST_METHOD'] === 'POST' )
 <body>
 
 <header>
-	<h1>🥣 Critter Chow</h1>
+	<h1>🐾 Critter Supply Co.</h1>
 	<div>
 		⭐ balance: <?= getStarBalance( $cart ) ?>
 		<form method="post" style="display: inline">
@@ -90,10 +154,36 @@ if( $_SERVER['REQUEST_METHOD'] === 'POST' )
 </header>
 
 <h2>Catalog</h2>
+
+<nav class="filters">
+	<a href="<?= htmlspecialchars( filterUrl( '', $search ) ) ?>" class="<?= $filterCategory === '' ? 'active' : '' ?>">All</a>
+	<?php foreach( $categories as $category ): ?>
+	<a href="<?= htmlspecialchars( filterUrl( $category, $search ) ) ?>" class="<?= $filterCategory === $category ? 'active' : '' ?>"><?= htmlspecialchars( $category ) ?></a>
+	<?php endforeach ?>
+	<form class="search" method="get" action="index.php">
+		<?php if( $filterCategory !== '' ): ?>
+		<input type="hidden" name="category" value="<?= htmlspecialchars( $filterCategory ) ?>">
+		<?php endif ?>
+		<input type="search" name="q" value="<?= htmlspecialchars( $search ) ?>" placeholder="Search products…">
+		<button type="submit">Search</button>
+	</form>
+</nav>
+
+<?php if( $filterCategory !== '' || $search !== '' ): ?>
+<p class="result-note">
+	Showing <?= count( $visibleProducts ) ?> of <?= count( $catalog->getProducts() ) ?> products<?= $filterCategory !== '' ? ' in ' . htmlspecialchars( $filterCategory ) : '' ?><?= $search !== '' ? ' matching “' . htmlspecialchars( $search ) . '”' : '' ?>
+	— <a href="index.php">clear filters</a>
+</p>
+<?php endif ?>
+
+<?php if( ! $visibleProducts ): ?>
+<p>No products match. Even the bear couldn't find anything.</p>
+<?php else: ?>
 <div class="products">
-	<?php foreach( $catalog->getProducts() as $product ): ?>
+	<?php foreach( $visibleProducts as $product ): ?>
 	<div class="card">
 		<div class="emoji"><?= $product->getEmoji() ?></div>
+		<span class="category"><?= htmlspecialchars( $product->getCategory() ) ?></span>
 		<?= $product->getNameHeader() ?>
 		<p><?= htmlspecialchars( $product->getShortDesc() ) ?></p>
 		<div class="cost">
@@ -109,6 +199,7 @@ if( $_SERVER['REQUEST_METHOD'] === 'POST' )
 	</div>
 	<?php endforeach ?>
 </div>
+<?php endif ?>
 
 <h2>Your Cart</h2>
 <?php if( ! $cart->getCartItems() ): ?>
