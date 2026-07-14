@@ -8,6 +8,7 @@ use treehousetim\shopCart\cartStorageSession;
 use treehousetim\shopCart\formatting;
 use treehousetim\shopCart\product;
 use treehousetim\shopCart\productAmountFormatterPrice;
+use treehousetim\shopCart\productVariation;
 use treehousetim\shopCart\totalFormatterInterface;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -56,6 +57,27 @@ class petSupplyProduct extends product
 // the class was originally named petFoodProduct; keep the old name working
 // for any code (or serialized session data) that still references it.
 class_alias( petSupplyProduct::class, 'petFoodProduct' );
+
+// a variation of a petSupplyProduct: the library handles attribute storage
+// and price fallback; the storefront extras (emoji, stars) delegate to the
+// parent so a variation renders exactly like its parent unless overridden
+class petSupplyVariation extends productVariation
+{
+	public function getEmoji() : string
+	{
+		return $this->getParentProduct()->getEmoji();
+	}
+	//------------------------------------------------------------------------
+	public function getStars() : string
+	{
+		if( $this->hasFieldAmount( 'stars' ) )
+		{
+			return $this->getFieldAmount( 'stars' );
+		}
+
+		return $this->getParentProduct()->getStars();
+	}
+}
 
 // formats star totals like "10 ⭐" via the library's auto-scaling unit formatter
 class starsTotalFormatter implements totalFormatterInterface
@@ -163,6 +185,39 @@ foreach( $staticCatalog as $row )
 
 	$product->setFormatter( $formatter );
 	$catalog->addProduct( $product );
+}
+
+// ---------------------------------------------------------------- variations
+// the blanket comes in four sizes. each size is its own catalog entry so the
+// cart and session storage resolve it by id; price falls back to the parent
+// unless overridden — L and XL cost 1.5x the base price.
+$blanket = ( new petSupplyProduct() )
+	->setEmoji( '🧶' )
+	->setStars( '2' )
+	->setId( 'pet-blanket' )
+	->setName( 'Pet Blanket' )
+	->setCategory( 'Beds' )
+	->setShortDesc( 'Machine-washable fleece for dens, crates, and couch forts.' )
+	->setPrice( '24.00' )
+	->setTotalTypeIdentifier( $priceTotal->getIdentifier() );
+
+$blanket->setFormatter( $formatter );
+
+// the parent itself is not added to the catalog — only its sizes are buyable
+foreach( [ 'S', 'M', 'L', 'XL' ] as $size )
+{
+	$variation = new petSupplyVariation( $blanket );
+	$variation
+		->setAttribute( 'size', $size )
+		->setId( 'pet-blanket-' . strtolower( $size ) )
+		->setName( $blanket->getName() . ' (' . $size . ')' );
+
+	if( in_array( $size, [ 'L', 'XL' ], true ) )
+	{
+		$variation->setPrice( bcmul( $blanket->getPrice(), '1.5', 2 ) );
+	}
+
+	$catalog->addProduct( $variation );
 }
 
 // ---------------------------------------------------------------- cart

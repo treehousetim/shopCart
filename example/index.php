@@ -1,6 +1,8 @@
 <?php
 
+use treehousetim\shopCart\product;
 use treehousetim\shopCart\productAmountFormatterPrice;
+use treehousetim\shopCart\productVariation;
 
 require __DIR__ . '/bootstrap.php';
 
@@ -73,7 +75,7 @@ if( $filterCategory !== '' && ! in_array( $filterCategory, $categories, true ) )
 	$filterCategory = '';
 }
 
-function productMatches( petSupplyProduct $product, string $category, string $search ) : bool
+function productMatches( product $product, string $category, string $search ) : bool
 {
 	if( $category !== '' && $product->getCategory() !== $category )
 	{
@@ -101,6 +103,24 @@ foreach( $catalog->getProducts() as $product )
 	if( productMatches( $product, $filterCategory, $search ) )
 	{
 		$visibleProducts[] = $product;
+	}
+}
+
+// collapse variations of one parent into a single card with a size picker;
+// standalone products get a card of their own
+$cards = [];
+
+foreach( $visibleProducts as $product )
+{
+	if( $product instanceof productVariation )
+	{
+		$key = 'variations:' . $product->getParentProduct()->getId();
+		$cards[$key]['display'] = $product->getParentProduct();
+		$cards[$key]['variations'][] = $product;
+	}
+	else
+	{
+		$cards[ $product->getId() ] = [ 'display' => $product, 'variations' => [] ];
 	}
 }
 ?>
@@ -180,12 +200,30 @@ foreach( $catalog->getProducts() as $product )
 <p>No products match. Even the bear couldn't find anything.</p>
 <?php else: ?>
 <div class="products">
-	<?php foreach( $visibleProducts as $product ): ?>
+	<?php foreach( $cards as $card ): $product = $card['display']; ?>
 	<div class="card">
 		<div class="emoji"><?= $product->getEmoji() ?></div>
 		<span class="category"><?= htmlspecialchars( $product->getCategory() ) ?></span>
 		<?= $product->getNameHeader() ?>
 		<p><?= htmlspecialchars( $product->getShortDesc() ) ?></p>
+		<?php if( $card['variations'] ): ?>
+		<div class="cost">
+			from <?= $product->formatAmount( productAmountFormatterPrice::tPRICE ) ?>
+			+ <?= $product->getStars() ?> ⭐
+		</div>
+		<form method="post">
+			<input type="hidden" name="action" value="add">
+			<select name="id">
+				<?php foreach( $card['variations'] as $variation ): ?>
+				<option value="<?= htmlspecialchars( $variation->getId() ) ?>">
+					<?= htmlspecialchars( $variation->getAttribute( 'size' ) ) ?> — $<?= number_format( (float)$variation->getPrice(), 2 ) ?>
+				</option>
+				<?php endforeach ?>
+			</select>
+			<input type="number" name="qty" value="1" min="1">
+			<button type="submit">Add to cart</button>
+		</form>
+		<?php else: ?>
 		<div class="cost">
 			<?= $product->formatAmount( productAmountFormatterPrice::tPRICE ) ?>
 			+ <?= $product->getStars() ?> ⭐
@@ -196,6 +234,7 @@ foreach( $catalog->getProducts() as $product )
 			<input type="number" name="qty" value="1" min="1">
 			<button type="submit">Add to cart</button>
 		</form>
+		<?php endif ?>
 	</div>
 	<?php endforeach ?>
 </div>
