@@ -161,3 +161,9 @@ it( 'throws when removing an unknown cart data type', function()
 
 	$cart->removeDataByType( 'missing' );
 } );
+
+it( 'has a no-op formatTotalType', function()
+{
+	// documented as "not used now"; exercised so the stub is covered
+	expect( ( new cart( new catalog() ) )->formatTotalType( '1', priceType() ) )->toBeNull();
+} );

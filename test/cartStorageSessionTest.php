@@ -151,6 +151,20 @@ it( 'empties both session buckets on emptyCart', function()
 	expect( $_SESSION['cart_data'] )->toBe( [] );
 } );
 
+it( 'throws when there is no active session', function()
+{
+	// close the session so session_status() is no longer ACTIVE;
+	// beforeEach restarts it for the following test
+	session_write_close();
+
+	$storage = new cartStorageSession();
+
+	$this->expectException( \treehousetim\shopCart\Exception::class );
+	$this->expectExceptionCode( \treehousetim\shopCart\Exception::noActiveSessionErrorCode );
+
+	$storage->emptyCart( new cart( new catalog() ) );
+} );
+
 it( 'skips stored items whose id is no longer in the catalog', function()
 {
 	// a stale id (e.g. a product removed since the cart was saved) is dropped

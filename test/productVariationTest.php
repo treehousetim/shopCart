@@ -132,6 +132,26 @@ it( 'reports a plain variation as not serialized', function()
 	expect( $variation->isSerialized() )->toBeFalse();
 } );
 
+it( 'lets its own name, description, image, category, and identifier win', function()
+{
+	$parent = makeProduct( 'shirt', '20.00' );
+	$parent->setShortDesc( 'parent desc' )->setImgLoc( '/parent.png' )->setCategory( 'parent-cat' );
+
+	$variation = ( new productVariation( $parent ) )
+		->setId( 'shirt-v' )
+		->setName( 'Own Name' )
+		->setShortDesc( 'Own desc' )
+		->setImgLoc( '/own.png' )
+		->setCategory( 'own-cat' )
+		->setTotalTypeIdentifier( 'own-id' );
+
+	expect( $variation->getName() )->toBe( 'Own Name' );
+	expect( $variation->getShortDesc() )->toBe( 'Own desc' );
+	expect( $variation->getImgLoc() )->toBe( '/own.png' );
+	expect( $variation->getCategory() )->toBe( 'own-cat' );
+	expect( $variation->getTotalTypeIdentifier() )->toBe( 'own-id' );
+} );
+
 it( 'falls back to the parent formatter and lets its own override', function()
 {
 	$parent = makeProduct( 'shirt', '20.00' );

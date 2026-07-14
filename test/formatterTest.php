@@ -65,3 +65,14 @@ it( 'formats a total type price via cartPriceTotalFormatter', function()
 	expect( $formatter->formatTotalType( '19.99', priceType() ) )
 		->toBe( '$ <span class="number">19.99</span>' );
 } );
+
+it( 'throws when cartPriceTotalFormatter is given a non-price type', function()
+{
+	$formatter = new cartPriceTotalFormatter();
+
+	$this->expectException( Exception::class );
+	$this->expectExceptionCode( Exception::invalidFormatErrorCode );
+
+	// pointsType()'s underlying type is tPRODUCT_FIELD, hitting the default branch
+	$formatter->formatTotalType( '10.00', pointsType() );
+} );

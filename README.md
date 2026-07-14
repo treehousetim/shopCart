@@ -240,3 +240,14 @@ To measure code coverage, run with a coverage driver enabled
 ```
 ./vendor/bin/pest --coverage
 ```
+
+The suite covers **100% of `src/`**. If your PHP has no coverage driver, you
+can measure it in a throwaway container:
+
+```
+docker run --rm -v "$PWD":/app -w /app php:8.3-cli sh -c '
+  apt-get update -qq && apt-get install -y -qq $PHPIZE_DEPS >/dev/null 2>&1
+  docker-php-ext-install bcmath >/dev/null 2>&1
+  pecl install pcov >/dev/null 2>&1 && docker-php-ext-enable pcov
+  php vendor/bin/pest --coverage'
+```
