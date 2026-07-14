@@ -2,6 +2,7 @@
 
 use treehousetim\shopCart\catalog;
 use treehousetim\shopCart\Exception;
+use treehousetim\shopCart\productAmountFormatterPrice;
 use treehousetim\shopCart\productVariation;
 
 it( 'lets a variation override the parent price', function()
@@ -129,4 +130,21 @@ it( 'reports a plain variation as not serialized', function()
 
 	expect( $parent->isSerialized() )->toBeFalse();
 	expect( $variation->isSerialized() )->toBeFalse();
+} );
+
+it( 'falls back to the parent formatter and lets its own override', function()
+{
+	$parent = makeProduct( 'shirt', '20.00' );
+	$parentFormatter = new productAmountFormatterPrice();
+	$parent->setFormatter( $parentFormatter );
+
+	$variation = ( new productVariation( $parent ) )->setId( 'shirt-v' );
+
+	// no formatter set on the variation: it uses the parent's
+	expect( $variation->getFormatter() )->toBe( $parentFormatter );
+
+	// an explicit formatter on the variation wins
+	$ownFormatter = new productAmountFormatterPrice();
+	$variation->setFormatter( $ownFormatter );
+	expect( $variation->getFormatter() )->toBe( $ownFormatter );
 } );

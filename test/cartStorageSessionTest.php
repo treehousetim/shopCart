@@ -5,6 +5,7 @@ use treehousetim\shopCart\catalog;
 use treehousetim\shopCart\cartStorageSession;
 use treehousetim\shopCart\productVariation;
 use treehousetim\shopCart\productVariationSerialized;
+use treehousetim\shopCart\test\fixtureCartData;
 
 // start a session once and reset its contents before each test so the storage
 // handler always sees a clean, active session
@@ -101,4 +102,70 @@ it( 'stores only id and qty for each item', function()
 	$cart->save();
 
 	expect( $_SESSION['cart_items'] )->toBe( [ [ 'id' => 'shirt:SN-A', 'qty' => 1 ] ] );
+} );
+
+it( 'round trips cart data through the session', function()
+{
+	$catalog = buildStorageCatalog();
+
+	$cartOut = ( new cart( $catalog ) )
+		->setStorageHandler( new cartStorageSession() );
+
+	$cartOut->addProduct( $catalog->getProductById( 'shirt' ), 1 );
+	$cartOut->addData(
+		( new fixtureCartData() )
+			->setType( 'coupon' )
+			->setData( [ 'code' => 'SAVE10', 'pct' => 10 ] )
+	);
+	$cartOut->save();
+
+	// simulate the session being written out and read back on a later request:
+	// the stored iCartData objects must survive php's session serialization
+	$_SESSION = unserialize( serialize( $_SESSION ) );
+
+	$cartIn = ( new cart( $catalog ) )
+		->setStorageHandler( new cartStorageSession() )
+		->load();
+
+	expect( $cartIn->hasCartDataType( 'coupon' ) )->toBeTrue();
+
+	$data = $cartIn->getDataByType( 'coupon' );
+	expect( $data->getType() )->toBe( 'coupon' );
+	expect( $data->getData() )->toBe( [ 'code' => 'SAVE10', 'pct' => 10 ] );
+} );
+
+it( 'empties both session buckets on emptyCart', function()
+{
+	$catalog = buildStorageCatalog();
+	$storage = new cartStorageSession();
+
+	$cart = ( new cart( $catalog ) )->setStorageHandler( $storage );
+	$cart->addProduct( $catalog->getProductById( 'shirt' ), 1 );
+	$cart->save();
+
+	expect( $_SESSION['cart_items'] )->not->toBe( [] );
+
+	$storage->emptyCart( $cart );
+
+	expect( $_SESSION['cart_items'] )->toBe( [] );
+	expect( $_SESSION['cart_data'] )->toBe( [] );
+} );
+
+it( 'skips stored items whose id is no longer in the catalog', function()
+{
+	// a stale id (e.g. a product removed since the cart was saved) is dropped
+	$_SESSION['cart_items'] = [
+		[ 'id' => 'gone', 'qty' => 2 ],
+		[ 'id' => 'shirt', 'qty' => 1 ],
+	];
+
+	$catalog = buildStorageCatalog();
+
+	$cart = ( new cart( $catalog ) )
+		->setStorageHandler( new cartStorageSession() )
+		->load();
+
+	expect( $cart->hasItemForProductId( 'shirt' ) )->toBeTrue();
+	expect( $cart->hasItemForProductId( 'gone' ) )->toBeFalse();
+	expect( $cart->getDistinctItemQty() )->toBe( '1' );
 } );

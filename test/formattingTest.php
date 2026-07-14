@@ -56,3 +56,16 @@ it( 'keeps the sign and produces a well-formed closing tag for negatives', funct
 	expect( formatting::unitFormatAutoScale( '-5.50', 'kg' ) )
 		->toBe( '<span class="number">-5.5</span> <span class="units">kg</span>' );
 } );
+
+it( 'collapses an all-zero decimal to a single zero', function()
+{
+	// regression: the old trim also stripped the leading zero, yielding ""
+	expect( formatting::unitFormatAutoScale( '0.000000', 'g' ) )
+		->toBe( '<span class="number">0</span> <span class="units">g</span>' );
+} );
+
+it( 'formats a zero money amount', function()
+{
+	expect( formatting::moneyFormat( 0 ) )
+		->toBe( '$ <span class="number">0.00</span>' );
+} );

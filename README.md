@@ -222,8 +222,21 @@ interface totalFormatterInterface
 
 
 ## Testing
-If you have cloned this repo, you can run the tests.
-There are no dependencies, but PHPUnit is installed with composer.
+If you have cloned this repo, you can run the test suite. The library itself
+has no third-party dependencies; the tests use [Pest](https://pestphp.com/),
+which is installed as a dev dependency by composer.
 
 1. `composer install`
-2. `./vendor/bin/phpunit`
+2. `./vendor/bin/pest`
+
+The suite lives under `test/`, with shared helpers in `test/helpers.php`
+(loaded via composer's `autoload-dev`) and reusable fixtures in
+`test/fixture*.php`. Note that Pest's runner requires **PHP 8.2+**; the library
+itself still supports PHP `^7.0` at runtime.
+
+To measure code coverage, run with a coverage driver enabled
+(`xdebug` or `pcov`):
+
+```
+./vendor/bin/pest --coverage
+```
