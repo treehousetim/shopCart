@@ -1,135 +1,132 @@
-<?php namespace treehousetim\shopCart\test;
+<?php
 
 use treehousetim\shopCart\catalog;
 use treehousetim\shopCart\Exception;
 use treehousetim\shopCart\productVariation;
 
-class productVariationTest extends testBase
+it( 'lets a variation override the parent price', function()
 {
-	public function testPriceOverride()
-	{
-		$parent = $this->makeProduct( 'shirt', '20.00' );
+	$parent = makeProduct( 'shirt', '20.00' );
 
-		$variation = ( new productVariation( $parent ) )
-			->setAttribute( 'size', 'XL' )
-			->setId( 'shirt-xl' )
-			->setPrice( '24.50' );
+	$variation = ( new productVariation( $parent ) )
+		->setAttribute( 'size', 'XL' )
+		->setId( 'shirt-xl' )
+		->setPrice( '24.50' );
 
-		$this->assertSame( '24.50', $variation->getPrice() );
-		$this->assertSame( '24.50', $variation->getAmountForCatalogTotalType( $this->priceType() ) );
-	}
-	//------------------------------------------------------------------------
-	public function testPriceDefaultsToParent()
-	{
-		$parent = $this->makeProduct( 'shirt', '20.00' );
+	expect( $variation->getPrice() )->toBe( '24.50' );
+	expect( $variation->getAmountForCatalogTotalType( priceType() ) )->toBe( '24.50' );
+} );
 
-		$variation = ( new productVariation( $parent ) )
-			->setAttribute( 'size', 'M' )
-			->setId( 'shirt-m' );
+it( 'falls back to the parent price when unset', function()
+{
+	$parent = makeProduct( 'shirt', '20.00' );
 
-		$this->assertSame( '20.00', $variation->getPrice() );
-		$this->assertSame( '20.00', $variation->getAmountForCatalogTotalType( $this->priceType() ) );
-	}
-	//------------------------------------------------------------------------
-	public function testAttributes()
-	{
-		$parent = $this->makeProduct( 'shirt', '20.00' );
+	$variation = ( new productVariation( $parent ) )
+		->setAttribute( 'size', 'M' )
+		->setId( 'shirt-m' );
 
-		$variation = ( new productVariation( $parent ) )
-			->setAttribute( 'size', 'L' )
-			->setAttribute( 'color', 'blue' )
-			->setId( 'shirt-l-blue' );
+	expect( $variation->getPrice() )->toBe( '20.00' );
+	expect( $variation->getAmountForCatalogTotalType( priceType() ) )->toBe( '20.00' );
+} );
 
-		$this->assertTrue( $variation->hasAttribute( 'size' ) );
-		$this->assertTrue( $variation->hasAttribute( 'color' ) );
-		$this->assertFalse( $variation->hasAttribute( 'material' ) );
-		$this->assertSame( 'L', $variation->getAttribute( 'size' ) );
-		$this->assertSame( 'blue', $variation->getAttribute( 'color' ) );
-		$this->assertSame( ['size' => 'L', 'color' => 'blue'], $variation->getAttributes() );
-	}
-	//------------------------------------------------------------------------
-	public function testMissingAttributeThrows()
-	{
-		$parent = $this->makeProduct( 'shirt', '20.00' );
-		$variation = ( new productVariation( $parent ) )->setId( 'shirt-v' );
+it( 'stores and reports attributes', function()
+{
+	$parent = makeProduct( 'shirt', '20.00' );
 
-		$this->expectException( Exception::class );
-		$this->expectExceptionCode( Exception::noSuchAttributeErrorCode );
+	$variation = ( new productVariation( $parent ) )
+		->setAttribute( 'size', 'L' )
+		->setAttribute( 'color', 'blue' )
+		->setId( 'shirt-l-blue' );
 
-		$variation->getAttribute( 'size' );
-	}
-	//------------------------------------------------------------------------
-	public function testParentFallbackGetters()
-	{
-		$parent = $this->makeProduct( 'shirt', '20.00' );
-		$parent->setImgLoc( '/img/shirt.png' )->setCategory( 'apparel' );
+	expect( $variation->hasAttribute( 'size' ) )->toBeTrue();
+	expect( $variation->hasAttribute( 'color' ) )->toBeTrue();
+	expect( $variation->hasAttribute( 'material' ) )->toBeFalse();
+	expect( $variation->getAttribute( 'size' ) )->toBe( 'L' );
+	expect( $variation->getAttribute( 'color' ) )->toBe( 'blue' );
+	expect( $variation->getAttributes() )->toBe( [ 'size' => 'L', 'color' => 'blue' ] );
+} );
 
-		$variation = ( new productVariation( $parent ) )->setId( 'shirt-v' );
+it( 'throws when reading a missing attribute', function()
+{
+	$parent = makeProduct( 'shirt', '20.00' );
+	$variation = ( new productVariation( $parent ) )->setId( 'shirt-v' );
 
-		$this->assertSame( 'Product shirt', $variation->getName() );
-		$this->assertSame( 'Description of shirt', $variation->getShortDesc() );
-		$this->assertSame( '/img/shirt.png', $variation->getImgLoc() );
-		$this->assertSame( 'apparel', $variation->getCategory() );
-		$this->assertSame( 'price', $variation->getTotalTypeIdentifier() );
-		$this->assertSame( $parent, $variation->getParentProduct() );
+	$this->expectException( Exception::class );
+	$this->expectExceptionCode( Exception::noSuchAttributeErrorCode );
 
-		$variation->setName( 'Shirt (Large, Blue)' );
-		$this->assertSame( 'Shirt (Large, Blue)', $variation->getName() );
-	}
-	//------------------------------------------------------------------------
-	public function testFieldAmountOverrideAndParentFallback()
-	{
-		$parent = $this->makeProduct( 'shirt', '20.00', '4' );
+	$variation->getAttribute( 'size' );
+} );
 
-		$withOverride = ( new productVariation( $parent ) )
-			->setFieldAmount( 'points', '9' )
-			->setId( 'shirt-a' );
+it( 'falls back to parent getters', function()
+{
+	$parent = makeProduct( 'shirt', '20.00' );
+	$parent->setImgLoc( '/img/shirt.png' )->setCategory( 'apparel' );
 
-		$withoutOverride = ( new productVariation( $parent ) )->setId( 'shirt-b' );
+	$variation = ( new productVariation( $parent ) )->setId( 'shirt-v' );
 
-		$this->assertTrue( $withOverride->hasFieldAmount( 'points' ) );
-		$this->assertSame( '9', $withOverride->getFieldAmount( 'points' ) );
-		$this->assertSame( '9', $withOverride->getAmountForCatalogTotalType( $this->pointsType() ) );
+	expect( $variation->getName() )->toBe( 'Product shirt' );
+	expect( $variation->getShortDesc() )->toBe( 'Description of shirt' );
+	expect( $variation->getImgLoc() )->toBe( '/img/shirt.png' );
+	expect( $variation->getCategory() )->toBe( 'apparel' );
+	expect( $variation->getTotalTypeIdentifier() )->toBe( 'price' );
+	expect( $variation->getParentProduct() )->toBe( $parent );
 
-		$this->assertFalse( $withoutOverride->hasFieldAmount( 'points' ) );
-		$this->assertSame( '4', $withoutOverride->getAmountForCatalogTotalType( $this->pointsType() ) );
-	}
-	//------------------------------------------------------------------------
-	public function testMissingFieldAmountThrows()
-	{
-		$parent = $this->makeProduct( 'shirt', '20.00' );
-		$variation = ( new productVariation( $parent ) )->setId( 'shirt-v' );
+	$variation->setName( 'Shirt (Large, Blue)' );
+	expect( $variation->getName() )->toBe( 'Shirt (Large, Blue)' );
+} );
 
-		$this->expectException( Exception::class );
-		$this->expectExceptionCode( Exception::noSuchFieldAmountErrorCode );
+it( 'overrides a field amount and otherwise falls back to the parent', function()
+{
+	$parent = makeProduct( 'shirt', '20.00', '4' );
 
-		$variation->getFieldAmount( 'points' );
-	}
-	//------------------------------------------------------------------------
-	public function testCatalogResolutionByVariationId()
-	{
-		$parent = $this->makeProduct( 'shirt', '20.00' );
+	$withOverride = ( new productVariation( $parent ) )
+		->setFieldAmount( 'points', '9' )
+		->setId( 'shirt-a' );
 
-		$variation = ( new productVariation( $parent ) )
-			->setAttribute( 'size', 'S' )
-			->setId( 'shirt-s' );
+	$withoutOverride = ( new productVariation( $parent ) )->setId( 'shirt-b' );
 
-		$catalog = ( new catalog() )
-			->addProduct( $parent )
-			->addProduct( $variation );
+	expect( $withOverride->hasFieldAmount( 'points' ) )->toBeTrue();
+	expect( $withOverride->getFieldAmount( 'points' ) )->toBe( '9' );
+	expect( $withOverride->getAmountForCatalogTotalType( pointsType() ) )->toBe( '9' );
 
-		$this->assertTrue( $catalog->hasProductId( 'shirt' ) );
-		$this->assertTrue( $catalog->hasProductId( 'shirt-s' ) );
-		$this->assertSame( $variation, $catalog->getProductById( 'shirt-s' ) );
-		$this->assertSame( $parent, $catalog->getProductById( 'shirt' ) );
-	}
-	//------------------------------------------------------------------------
-	public function testIsNotSerialized()
-	{
-		$parent = $this->makeProduct( 'shirt', '20.00' );
-		$variation = ( new productVariation( $parent ) )->setId( 'shirt-v' );
+	expect( $withoutOverride->hasFieldAmount( 'points' ) )->toBeFalse();
+	expect( $withoutOverride->getAmountForCatalogTotalType( pointsType() ) )->toBe( '4' );
+} );
 
-		$this->assertFalse( $parent->isSerialized() );
-		$this->assertFalse( $variation->isSerialized() );
-	}
-}
+it( 'throws when reading a missing field amount', function()
+{
+	$parent = makeProduct( 'shirt', '20.00' );
+	$variation = ( new productVariation( $parent ) )->setId( 'shirt-v' );
+
+	$this->expectException( Exception::class );
+	$this->expectExceptionCode( Exception::noSuchFieldAmountErrorCode );
+
+	$variation->getFieldAmount( 'points' );
+} );
+
+it( 'resolves a variation in the catalog by its own id', function()
+{
+	$parent = makeProduct( 'shirt', '20.00' );
+
+	$variation = ( new productVariation( $parent ) )
+		->setAttribute( 'size', 'S' )
+		->setId( 'shirt-s' );
+
+	$catalog = ( new catalog() )
+		->addProduct( $parent )
+		->addProduct( $variation );
+
+	expect( $catalog->hasProductId( 'shirt' ) )->toBeTrue();
+	expect( $catalog->hasProductId( 'shirt-s' ) )->toBeTrue();
+	expect( $catalog->getProductById( 'shirt-s' ) )->toBe( $variation );
+	expect( $catalog->getProductById( 'shirt' ) )->toBe( $parent );
+} );
+
+it( 'reports a plain variation as not serialized', function()
+{
+	$parent = makeProduct( 'shirt', '20.00' );
+	$variation = ( new productVariation( $parent ) )->setId( 'shirt-v' );
+
+	expect( $parent->isSerialized() )->toBeFalse();
+	expect( $variation->isSerialized() )->toBeFalse();
+} );

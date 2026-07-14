@@ -37,9 +37,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - New `Exception` error codes: `noSuchAttributeErrorCode` (6),
   `duplicateSerialErrorCode` (7), `serializedQtyErrorCode` (8),
   `noSuchFieldAmountErrorCode` (9).
-- PHPUnit test suite under `test/` (variations, serialized variations, session
-  storage round trip) and a `phpunit.xml.dist` at the repo root; run with
-  `./vendor/bin/phpunit`.
+- Full [Pest](https://pestphp.com/) 3 unit-test suite under `test/` covering
+  every class — formatting, formatters, `cart`/`cartItem` totals, `catalog`,
+  `product`, `catalogTotalType`, `cartData`, `Exception`, and the product
+  variations / serialized units / session storage round trip. Run with
+  `./vendor/bin/pest`. Pest is `require-dev` only, so it does not affect the
+  library's `^7.0` runtime support — but note the test runner itself requires
+  PHP 8.2+, so the suite is no longer executed on PHP 7.
+- **PHP 8 support** — the `php` constraint widens from `^7.0` to
+  `^7.0 || ^8.0`, and the dev PHPUnit constraint from `^6` to `^6 || ^9.3` so
+  the suite runs on PHP 8.
 
 ### Fixed
 
