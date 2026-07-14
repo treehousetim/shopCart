@@ -9,12 +9,10 @@ services:
       - "8000:8000"
 
   # one-shot dependency install: docker compose run --rm composer
-  # --ignore-platform-req=php is needed until treehousetim/exception
-  # tags a release that allows php ^8.0
   composer:
     image: composer:latest
     profiles: [tools]
     volumes:
       - ..:/app
     working_dir: /app
-    command: composer install --ignore-platform-req=php
+    command: composer install

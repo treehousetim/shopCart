@@ -35,8 +35,7 @@ Then open <http://localhost:8000>.
 
 The `store` service builds a small image from the `Dockerfile` here because
 the library needs `ext-bcmath` for money math and official `php` images
-don't bundle it. The `composer` service passes `--ignore-platform-req=php`
-until `treehousetim/exception` tags a release that allows PHP 8.
+don't bundle it.
 
 ## What it demonstrates
 

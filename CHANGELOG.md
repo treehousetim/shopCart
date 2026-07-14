@@ -86,6 +86,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- **No third-party dependencies** — the `treehousetim/exception` package
+  requirement was dropped from `composer.json`. Its ~15-line base class (a
+  variadic message/code constructor over `\LogicException`) is now inlined into
+  `treehousetim\shopCart\Exception`, so behavior is unchanged: `Exception` still
+  extends `\LogicException`, still accepts `new Exception( 'message', $code )`,
+  and all error-code constants are unchanged. The only remaining `require` entry
+  besides `php` is the `ext-bcmath` platform extension.
+- **Requirement now declared** — `composer.json` adds `ext-bcmath: *`. The
+  library has always called `bcadd()`/`bcmul()` at runtime, so this only makes
+  an existing implicit dependency explicit, but `composer install`/`update`
+  will now refuse to resolve on a PHP build compiled without the bcmath
+  extension where it previously installed (and then fataled on first total).
 - **BREAKING** — `cartStorageSession` now stores the `iCartData` objects
   themselves in `$_SESSION['cart_data']` instead of their `getForStorage()`
   output. The previous behavior was unusable: `loadCart()` expected objects and

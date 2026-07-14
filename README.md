@@ -5,6 +5,17 @@ Shopping Cart Core Functionality PHP Library
 
 `composer require treehousetim/shopcart`
 
+## Requirements
+
+shopCart has **no third-party package dependencies** — installing it pulls in
+nothing but the library itself.
+
+It does require PHP 7 or 8 and the [bcmath extension](https://www.php.net/manual/en/book.bc.php),
+which the library uses for exact decimal money math (amounts are handled as
+strings, never floats). bcmath ships with PHP and is enabled by default on
+most builds; if yours lacks it, install/enable `ext-bcmath` (e.g.
+`apt-get install php-bcmath`, or the `--enable-bcmath` build flag).
+
 ## Interfaces and Abstract Classes
 
 In order to use the shopCart, you will need to instantiate both a `treehousetim\shopCart\cart` and a `treehousetim\shopCart\catalog` object.
