@@ -62,6 +62,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   undeclared `$typeLoader` property instead of the declared `$totalTypeLoader`.
   On PHP 8.2+ this created a deprecated dynamic property (deprecation warning on
   every cart setup). All internal uses now reference `$totalTypeLoader`.
+- **PHP 7.0–7.3 compatibility** — `cartData::setData()` and `setType()` declared
+  a `: self` return type while the `iCartData` interface declares them returning
+  `: iCartData`. That is a covariant return type, which is a **fatal error before
+  PHP 7.4** — so the class could not even load on the PHP 7.0–7.3 the package
+  claims to support. Both now return `: iCartData`, invariant with the interface
+  (verified by loading every `src/` class under PHP 7.0).
 - `cartData` declared `implements jsonSerializable`, which resolved to a
   nonexistent interface inside the library namespace and was a fatal error the
   moment the class loaded. It now implements `\JsonSerializable`, and

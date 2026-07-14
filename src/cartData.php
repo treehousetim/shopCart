@@ -14,7 +14,9 @@ abstract class cartData implements \JsonSerializable, iCartData
 		return $this->jsonSerialize();
 	}
 	//------------------------------------------------------------------------
-	public function setData( $data ) : self
+	// return iCartData (not self) to stay invariant with the interface:
+	// covariant return types are a fatal error before PHP 7.4
+	public function setData( $data ) : iCartData
 	{
 		$this->data = $data;
 		return $this;
@@ -25,7 +27,7 @@ abstract class cartData implements \JsonSerializable, iCartData
 		return $this->data;
 	}
 	//------------------------------------------------------------------------
-	public function setType( string $type ) : self
+	public function setType( string $type ) : iCartData
 	{
 		$this->type = $type;
 		return $this;
