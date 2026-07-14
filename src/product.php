@@ -116,6 +116,11 @@ abstract class product
 		return $this;
 	}
 	//------------------------------------------------------------------------
+	public function isSerialized() : bool
+	{
+		return false;
+	}
+	//------------------------------------------------------------------------
 	public function getAmountForCatalogTotalType( catalogTotalType $type ) : string
 	{
 		if( $type->getType() == catalogTotalType::tPRODUCT_PRICE )

@@ -1,0 +1,18 @@
+services:
+  store:
+    build: .
+    volumes:
+      - ..:/app
+    working_dir: /app
+    command: php -S 0.0.0.0:8000 -t example
+    ports:
+      - "8000:8000"
+
+  # one-shot dependency install: docker compose run --rm composer
+  composer:
+    image: composer:latest
+    profiles: [tools]
+    volumes:
+      - ..:/app
+    working_dir: /app
+    command: composer install

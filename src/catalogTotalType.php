@@ -65,15 +65,15 @@ class catalogTotalType
 		return $this->productField;
 	} 
 	//------------------------------------------------------------------------
-	public function setFormatter( shopCartTotalFormatterInterface $formatter ) : self
+	public function setFormatter( totalFormatterInterface $formatter ) : self
 	{
 		$this->formatter = $formatter;
 		return $this;
 	}
 	//------------------------------------------------------------------------
-	public function format()
+	public function format( string $value )
 	{
-		$this->formatter->formatTotalType( $this );
+		return $this->formatter->formatTotalType( $value, $this );
 	}
 	//------------------------------------------------------------------------
 	public function setIdentifier( string $id ) : self

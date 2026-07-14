@@ -4,7 +4,7 @@ class cartPriceTotalFormatter implements totalFormatterInterface
 {
 	public function formatTotalType( string $value, catalogTotalType $type )
 	{
-		switch( $type->type )
+		switch( $type->getType() )
 		{
 		case catalogTotalType::tPRODUCT_PRICE:
 			return formatting::moneyFormat( $value );

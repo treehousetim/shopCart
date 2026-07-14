@@ -5,10 +5,6 @@ class cart implements totalInterface
 	protected $items = [];
 	protected $data = [];
 
-	public $productsByMetal = [];
-	protected $totals = [];
-	protected $metalsCollection;
-
 	public $totalTypes = [];
 	protected $totalTypeLoader;
 
@@ -40,7 +36,7 @@ class cart implements totalInterface
 	//------------------------------------------------------------------------
 	public function setTotalTypeLoader( catalogTotalTypeLoaderInterface $loader ) : self
 	{
-		$this->typeLoader = $loader;
+		$this->totalTypeLoader = $loader;
 		$this->populateTotalTypes();
 		return $this;
 	}
@@ -91,6 +87,11 @@ class cart implements totalInterface
 	{
 		if( $this->hasItemForProductId( $product->getId() ) )
 		{
+			if( $product->isSerialized() )
+			{
+				throw new Exception( 'Serialized item already in cart: ' . $product->getId(), Exception::duplicateSerialErrorCode );
+			}
+
 			$cartItem = $this->getItemByProductId( $product->getId() );
 			$cartItem->addQty( $qty );
 		}
@@ -115,13 +116,13 @@ class cart implements totalInterface
 	//------------------------------------------------------------------------
 	public function populateTotalTypes() : self
 	{
-		$this->typeLoader->resetType();
+		$this->totalTypeLoader->resetType();
 		$this->totalTypes = [];
 		do
 		{
-			$type = $this->typeLoader->getType();
+			$type = $this->totalTypeLoader->getType();
 			$this->totalTypes[] = $type;
-		} while( $this->typeLoader->nextType() );
+		} while( $this->totalTypeLoader->nextType() );
 
 		return $this;
 	}
@@ -138,20 +139,10 @@ class cart implements totalInterface
 
 		foreach( $this->items as $item )
 		{
-			$total = bcadd( $item->getTotalTypeAmount( $type ), $total );
+			$total = bcadd( $item->getTotalTypeAmount( $type ), $total, formatting::$longScale );
 		}
 
 		return $total;
-	}
-	//------------------------------------------------------------------------
-	public function getAmountOrdered( catalogTotalType $type ) : string 
-	{
-		$amountOrdered = 0;
-		foreach ($this->items as $item) 
-		{
-			$amountOrdered = $item->getTotalAmount( $type );
-		}
-		return $amountOrdered;
 	}
 	//------------------------------------------------------------------------
 	public function getAmountTotal( catalogTotalType $type ) : string
@@ -159,7 +150,7 @@ class cart implements totalInterface
 		$totalAmount = 0;
 		foreach ($this->items as $item) 
 		{
-			$totalAmount = bcadd($item->getTotalAmount( $type ), $totalAmount );
+			$totalAmount = bcadd( $item->getTotalAmount( $type ), $totalAmount, formatting::$longScale );
 		}
 		return $totalAmount;
 	}
@@ -208,17 +199,6 @@ class cart implements totalInterface
 	{
 		$this->requireProductId( $id );
 		$this->getItemByProductId( $id )->updateQty( $qty );
-	}
-	//------------------------------------------------------------------------
-	public function populate()
-	{
-		$model = new productModel();
-		$rows = $model->fetchAll();
-
-		foreach( $rows as $product )
-		{
-			$this->addItem( new cartItem( $product ) );
-		}
 	}
 	//------------------------------------------------------------------------
 	public function load() : self
